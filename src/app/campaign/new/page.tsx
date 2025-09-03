@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ArrowLeft, ArrowRight, MapPin, Target, Zap, CreditCard, Check } from 'lucide-react'
+import { ArrowLeft, ArrowRight, MapPin, Target, Zap, CreditCard, Check, Settings, Sparkles, Map, Eye, DollarSign } from 'lucide-react'
 import { formatCurrency, calculateImpressions } from '@/lib/utils'
 import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverLift } from '@/components/ui/animated'
 import MapboxMap from '@/components/MapboxMap'
@@ -16,7 +16,7 @@ export default function NewCampaignPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [campaignData, setCampaignData] = useState({
     name: '',
-    budget: 100,
+    budget: '',
     businessType: '',
     location: '',
     targetRadius: 1,
@@ -32,7 +32,18 @@ export default function NewCampaignPage() {
       visualElements: ''
     }
   })
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
+
+  const clearError = (field: string) => {
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
 
   // Redirect if not authenticated
   if (status === 'loading') {
@@ -47,11 +58,11 @@ export default function NewCampaignPage() {
   }
 
   const steps = [
-    { id: 1, title: 'Campaign Setup', description: 'Budget & Business Info' },
-    { id: 2, title: 'AI Ad Creation', description: 'Design Your Ad' },
-    { id: 3, title: 'Targeting', description: 'Choose Locations' },
-    { id: 4, title: 'Review', description: 'Final Check' },
-    { id: 5, title: 'Payment', description: 'Launch Campaign' }
+    { id: 1, title: 'Setup', description: 'Budget & Info', icon: Settings },
+    { id: 2, title: 'AI Create', description: 'Design Ad', icon: Sparkles },
+    { id: 3, title: 'Target', description: 'Locations', icon: Map },
+    { id: 4, title: 'Review', description: 'Final Check', icon: Eye },
+    { id: 5, title: 'Launch', description: 'Payment', icon: DollarSign }
   ]
 
   const businessTypes = [
@@ -66,9 +77,46 @@ export default function NewCampaignPage() {
     'Other'
   ]
 
+  const validateStep = (step: number): boolean => {
+    const newErrors: {[key: string]: string} = {}
+    
+    if (step === 1) {
+      if (!campaignData.name.trim()) {
+        newErrors.name = 'Campaign name is required'
+      }
+      if (!campaignData.businessType) {
+        newErrors.businessType = 'Business type is required'
+      }
+      if (!campaignData.location.trim()) {
+        newErrors.location = 'Location is required'
+      }
+      const budget = Number(campaignData.budget)
+      if (!campaignData.budget || isNaN(budget)) {
+        newErrors.budget = 'Budget is required'
+      } else if (budget < 50) {
+        newErrors.budget = 'Minimum budget is £50'
+      }
+    } else if (step === 2) {
+      if (!campaignData.creative.headline.trim()) {
+        newErrors.headline = 'Headline is required'
+      }
+      if (!campaignData.creative.description.trim()) {
+        newErrors.description = 'Description is required'
+      }
+      if (!campaignData.creative.cta.trim()) {
+        newErrors.cta = 'Call to action is required'
+      }
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleNext = async () => {
     if (currentStep < 5) {
-      setCurrentStep(currentStep + 1)
+      if (validateStep(currentStep)) {
+        setCurrentStep(currentStep + 1)
+      }
     } else {
       // Handle campaign launch
       await launchCampaign()
@@ -87,7 +135,7 @@ export default function NewCampaignPage() {
         body: JSON.stringify({
           name: campaignData.name,
           description: `${campaignData.businessType} campaign`,
-          budget: campaignData.budget,
+          budget: Number(campaignData.budget),
           targetLocation: selectedLocation?.address || campaignData.location,
           targetRadius: campaignData.targetRadius,
           creative: campaignData.creative,
@@ -113,7 +161,7 @@ export default function NewCampaignPage() {
         },
         body: JSON.stringify({
           campaignId: campaign.id,
-          amount: campaignData.budget * 1.02, // Include 2% platform fee
+          amount: Number(campaignData.budget) * 1.02, // Include 2% platform fee
           currency: 'GBP'
         }),
       })
@@ -146,30 +194,33 @@ export default function NewCampaignPage() {
     }
   }
 
-  const estimatedImpressions = calculateImpressions(campaignData.budget)
+  const estimatedImpressions = calculateImpressions(Number(campaignData.budget) || 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
       {/* Header */}
       <div className="canopy-glass backdrop-blur-md border-b border-orange-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-4">
             <FadeIn delay={0.2}>
-              <div className="flex items-center space-x-6">
-                <button className="flex items-center text-orange-600 hover:text-orange-700 smooth-transition">
-                  <ArrowLeft className="w-5 h-5 mr-2" />
-                  Back to Dashboard
+              <div className="flex items-center space-x-4">
+                <button 
+                  onClick={() => router.push('/')}
+                  className="flex items-center text-orange-600 hover:text-orange-700 smooth-transition text-sm"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back
                 </button>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 canopy-gradient rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">C</span>
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 canopy-gradient rounded-lg flex items-center justify-center shadow-lg">
+                    <span className="text-white font-bold text-sm">C</span>
                   </div>
-                  <span className="text-2xl font-bold canopy-text-gradient">Canopy</span>
+                  <span className="text-xl font-bold canopy-text-gradient">Canopy</span>
                 </div>
               </div>
             </FadeIn>
             <FadeIn delay={0.4}>
-              <div className="text-sm text-orange-600 font-semibold bg-orange-50 px-4 py-2 rounded-full">
+              <div className="text-sm text-orange-600 font-semibold bg-orange-50 px-3 py-1.5 rounded-full">
                 Step {currentStep} of 5
               </div>
             </FadeIn>
@@ -177,39 +228,61 @@ export default function NewCampaignPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Progress Steps */}
         <FadeIn delay={0.6}>
-          <div className="mb-12">
-            <div className="flex items-center justify-between">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 smooth-transition ${
-                    currentStep >= step.id 
-                      ? 'bg-orange-500 border-orange-500 text-white shadow-lg' 
-                      : 'border-orange-200 text-orange-400 bg-white'
-                  }`}>
-                    {currentStep > step.id ? (
-                      <Check className="w-6 h-6" />
-                    ) : (
-                      <span className="text-sm font-bold">{step.id}</span>
-                    )}
-                  </div>
-                  <div className="ml-4 hidden sm:block">
-                    <p className={`text-sm font-semibold ${
-                      currentStep >= step.id ? 'text-orange-600' : 'text-gray-500'
-                    }`}>
-                      {step.title}
-                    </p>
-                    <p className="text-xs text-gray-500">{step.description}</p>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`hidden sm:block w-20 h-1 mx-6 rounded-full ${
-                      currentStep > step.id ? 'bg-orange-500' : 'bg-orange-200'
-                    }`} />
-                  )}
+          <div className="mb-8">
+            {/* Compact Progress Bar */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-orange-100 hover:shadow-md transition-shadow duration-300">
+              {/* Progress Line */}
+              <div className="relative mb-4">
+                <div className="absolute top-1/2 left-0 right-0 h-1 bg-orange-100 rounded-full transform -translate-y-1/2"></div>
+                <div 
+                  className="absolute top-1/2 left-0 h-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transform -translate-y-1/2 transition-all duration-700 ease-out shadow-sm"
+                  style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full animate-pulse opacity-50"></div>
                 </div>
-              ))}
+              </div>
+              
+              {/* Step Indicators */}
+              <div className="flex justify-between items-center">
+                {steps.map((step, index) => {
+                  const IconComponent = step.icon
+                  const isActive = currentStep === step.id
+                  const isCompleted = currentStep > step.id
+                  
+                  return (
+                    <div key={step.id} className="flex flex-col items-center group cursor-pointer">
+                      <div className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 smooth-transition group-hover:scale-105 ${
+                        isCompleted 
+                          ? 'bg-orange-500 border-orange-500 text-white shadow-lg' 
+                          : isActive
+                          ? 'bg-orange-500 border-orange-500 text-white shadow-lg ring-4 ring-orange-200'
+                          : 'border-orange-200 text-orange-400 bg-white hover:border-orange-300 hover:shadow-md'
+                      }`}>
+                        {isCompleted ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <IconComponent className="w-4 h-4" />
+                        )}
+                      </div>
+                      
+                      {/* Step Labels */}
+                      <div className="mt-2 text-center">
+                        <p className={`text-xs font-semibold transition-colors ${
+                          isActive || isCompleted ? 'text-orange-600' : 'text-gray-500'
+                        }`}>
+                          {step.title}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </FadeIn>
@@ -217,8 +290,8 @@ export default function NewCampaignPage() {
         {/* Step Content */}
         <FadeIn delay={0.8}>
           <div className="canopy-card p-10">
-                                {currentStep === 1 && <CampaignSetupStep data={campaignData} setData={setCampaignData} />}
-                    {currentStep === 2 && <AICreationStep data={campaignData} setData={setCampaignData} />}
+                                {currentStep === 1 && <CampaignSetupStep data={campaignData} setData={setCampaignData} errors={errors} clearError={clearError} />}
+                    {currentStep === 2 && <AICreationStep data={campaignData} setData={setCampaignData} errors={errors} clearError={clearError} />}
                     {currentStep === 3 && <TargetingStep data={campaignData} setData={setCampaignData} onLocationSelect={setSelectedLocation} />}
                     {currentStep === 4 && <ReviewStep data={campaignData} estimatedImpressions={estimatedImpressions} />}
                     {currentStep === 5 && <PaymentStep data={campaignData} estimatedImpressions={estimatedImpressions} />}
@@ -245,10 +318,20 @@ export default function NewCampaignPage() {
               )}
               <button
                 onClick={handleNext}
-                className="flex items-center px-8 py-4 canopy-button"
+                disabled={isLoading}
+                className="flex items-center px-8 py-4 canopy-button disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {currentStep === 5 ? 'Launch Campaign' : 'Next'}
-                <ArrowRight className="w-5 h-5 ml-2" />
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    {currentStep === 5 ? 'Launching...' : 'Loading...'}
+                  </div>
+                ) : (
+                  <>
+                    {currentStep === 5 ? 'Launch Campaign' : 'Next'}
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -258,7 +341,9 @@ export default function NewCampaignPage() {
   )
 }
 
-function CampaignSetupStep({ data, setData }: { data: any, setData: any }) {
+function CampaignSetupStep({ data, setData, errors, clearError }: { data: any, setData: any, errors: any, clearError: (field: string) => void }) {
+  const budget = Number(data.budget) || 0
+  
   return (
     <StaggerContainer className="space-y-8">
       <StaggerItem>
@@ -272,54 +357,86 @@ function CampaignSetupStep({ data, setData }: { data: any, setData: any }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
-              Campaign Name
+              Campaign Name *
             </label>
             <input
               type="text"
               value={data.name}
-              onChange={(e) => setData({...data, name: e.target.value})}
+              onChange={(e) => {
+                setData({...data, name: e.target.value})
+                clearError('name')
+              }}
               placeholder="e.g., Summer Sale - Central London"
-              className="canopy-input"
+              className={`canopy-input ${errors.name ? 'border-red-500 focus:border-red-500' : ''}`}
             />
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
-              Business Type
+              Business Type *
             </label>
             <select
               value={data.businessType}
-              onChange={(e) => setData({...data, businessType: e.target.value})}
-              className="canopy-input"
+              onChange={(e) => {
+                setData({...data, businessType: e.target.value})
+                clearError('businessType')
+              }}
+              className={`canopy-input ${errors.businessType ? 'border-red-500 focus:border-red-500' : ''}`}
             >
               <option value="">Select business type</option>
               {['Restaurant & Food', 'Retail & Shopping', 'Health & Beauty', 'Professional Services', 'Entertainment', 'Technology', 'Real Estate', 'Automotive', 'Other'].map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
             </select>
+            {errors.businessType && <p className="text-red-500 text-sm mt-1">{errors.businessType}</p>}
           </div>
         </div>
       </StaggerItem>
 
       <StaggerItem>
-        <div>
-          <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
-            Budget (£)
-          </label>
-          <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
+              Location *
+            </label>
             <input
-              type="number"
-              value={data.budget}
-              onChange={(e) => setData({...data, budget: Number(e.target.value)})}
-              min="50"
-              max="10000"
-              className="canopy-input pr-12"
+              type="text"
+              value={data.location}
+              onChange={(e) => {
+                setData({...data, location: e.target.value})
+                clearError('location')
+              }}
+              placeholder="e.g., Central London, UK"
+              className={`canopy-input ${errors.location ? 'border-red-500 focus:border-red-500' : ''}`}
             />
-            <div className="absolute right-4 top-3 text-orange-500 font-semibold">£</div>
+            {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
           </div>
-          <p className="text-sm text-orange-600 mt-2 font-medium">
-            Minimum £50. CPM: £7.00
-          </p>
+
+          <div>
+            <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
+              Budget (£) *
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                value={data.budget}
+                onChange={(e) => {
+                  setData({...data, budget: e.target.value})
+                  clearError('budget')
+                }}
+                min="50"
+                max="10000"
+                placeholder="100"
+                className={`canopy-input pr-12 ${errors.budget ? 'border-red-500 focus:border-red-500' : ''}`}
+              />
+              <div className="absolute right-4 top-3 text-orange-500 font-semibold">£</div>
+            </div>
+            {errors.budget && <p className="text-red-500 text-sm mt-1">{errors.budget}</p>}
+            <p className="text-sm text-orange-600 mt-2 font-medium">
+              Minimum £50. CPM: £7.00
+            </p>
+          </div>
         </div>
       </StaggerItem>
 
@@ -329,11 +446,11 @@ function CampaignSetupStep({ data, setData }: { data: any, setData: any }) {
           <div className="grid grid-cols-2 gap-6 text-sm">
             <div>
               <span className="text-orange-700 font-semibold">Estimated Impressions:</span>
-              <span className="font-bold ml-2 text-orange-900">{calculateImpressions(data.budget).toLocaleString()}</span>
+              <span className="font-bold ml-2 text-orange-900">{calculateImpressions(budget).toLocaleString()}</span>
             </div>
             <div>
               <span className="text-orange-700 font-semibold">Estimated Reach:</span>
-              <span className="font-bold ml-2 text-orange-900">{Math.round(calculateImpressions(data.budget) * 0.3).toLocaleString()} people</span>
+              <span className="font-bold ml-2 text-orange-900">{Math.round(calculateImpressions(budget) * 0.3).toLocaleString()} people</span>
             </div>
           </div>
         </div>
@@ -342,7 +459,7 @@ function CampaignSetupStep({ data, setData }: { data: any, setData: any }) {
   )
 }
 
-function AICreationStep({ data, setData }: { data: any, setData: any }) {
+function AICreationStep({ data, setData, errors, clearError }: { data: any, setData: any, errors: any, clearError: (field: string) => void }) {
   const [isGenerating, setIsGenerating] = useState(false)
 
   const generateWithAI = async () => {
@@ -408,42 +525,54 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
       </StaggerItem>
 
       <StaggerItem>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="space-y-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Column - Form Fields */}
+          <div className="xl:col-span-1 space-y-6">
             <div>
               <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
-                Headline
+                Headline *
               </label>
               <input
                 type="text"
                 value={data.creative.headline}
-                onChange={(e) => setData({...data, creative: {...data.creative, headline: e.target.value}})}
+                onChange={(e) => {
+                  setData({...data, creative: {...data.creative, headline: e.target.value}})
+                  clearError('headline')
+                }}
                 placeholder="Enter your headline"
-                className="canopy-input"
+                className={`canopy-input ${errors.headline ? 'border-red-500 focus:border-red-500' : ''}`}
               />
+              {errors.headline && <p className="text-red-500 text-sm mt-1">{errors.headline}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
-                Description
+                Description *
               </label>
               <textarea
                 value={data.creative.description}
-                onChange={(e) => setData({...data, creative: {...data.creative, description: e.target.value}})}
+                onChange={(e) => {
+                  setData({...data, creative: {...data.creative, description: e.target.value}})
+                  clearError('description')
+                }}
                 placeholder="Describe your offer or business"
-                rows={4}
-                className="canopy-input resize-none"
+                rows={3}
+                className={`canopy-input resize-none ${errors.description ? 'border-red-500 focus:border-red-500' : ''}`}
               />
+              {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
-                Call to Action
+                Call to Action *
               </label>
               <select
                 value={data.creative.cta}
-                onChange={(e) => setData({...data, creative: {...data.creative, cta: e.target.value}})}
-                className="canopy-input"
+                onChange={(e) => {
+                  setData({...data, creative: {...data.creative, cta: e.target.value}})
+                  clearError('cta')
+                }}
+                className={`canopy-input ${errors.cta ? 'border-red-500 focus:border-red-500' : ''}`}
               >
                 <option value="">Select CTA</option>
                 <option value="Visit Now">Visit Now</option>
@@ -452,20 +581,21 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
                 <option value="Learn More">Learn More</option>
                 <option value="Get Quote">Get Quote</option>
               </select>
+              {errors.cta && <p className="text-red-500 text-sm mt-1">{errors.cta}</p>}
             </div>
 
             <HoverLift>
               <button
                 onClick={generateWithAI}
                 disabled={isGenerating}
-                className="w-full canopy-button py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full canopy-button py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center justify-center">
-                  <Zap className="w-5 h-5 mr-3" />
+                  <Zap className="w-4 h-4 mr-2" />
                   {isGenerating ? (
                     <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                      Generating with AI...
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Generating...
                     </div>
                   ) : (
                     'Generate with AI'
@@ -475,8 +605,11 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
             </HoverLift>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border border-orange-200">
-            <h3 className="font-bold text-orange-900 mb-6 text-xl">Live Preview</h3>
+          {/* Right Column - Live Preview and AI Details */}
+          <div className="xl:col-span-2 space-y-6">
+            {/* Live Preview */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
+              <h3 className="font-bold text-orange-900 mb-4 text-lg">Live Preview</h3>
             {/* Dynamic Ad Background Based on AI Suggestions */}
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-300" style={{
               background: data.creative.colorScheme?.includes('blue') ? 
@@ -508,11 +641,11 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
               </div>
               
               {/* Ad Content */}
-              <div className="relative z-10 p-8 text-center">
+              <div className="relative z-10 p-6 text-center">
                 {/* Dynamic Logo Based on Business Type */}
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden border-2 border-white/30">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden border-2 border-white/30">
                   <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
-                  <span className="text-white font-bold text-2xl relative z-10 animate-logo-spin drop-shadow-lg">
+                  <span className="text-white font-bold text-xl relative z-10 animate-logo-spin drop-shadow-lg">
                     {data.businessType === 'Restaurant & Food' ? '🍽️' :
                      data.businessType === 'Retail & Shopping' ? '🛍️' :
                      data.businessType === 'Health & Beauty' ? '💄' :
@@ -526,20 +659,20 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
                 </div>
                 
                 {/* Animated Headline */}
-                <div className="mb-4 animate-ad-slide-in">
-                  <h4 className="font-bold text-3xl mb-2 text-white drop-shadow-lg animate-gradient-shift">
+                <div className="mb-3 animate-ad-slide-in">
+                  <h4 className="font-bold text-2xl mb-2 text-white drop-shadow-lg animate-gradient-shift">
                     {data.creative.headline || 'Your Headline Here'}
                   </h4>
-                  <div className="w-20 h-1 bg-white/80 mx-auto rounded-full animate-ad-shimmer"></div>
+                  <div className="w-16 h-1 bg-white/80 mx-auto rounded-full animate-ad-shimmer"></div>
                 </div>
                 
                 {/* Engaging Description */}
-                <p className="text-white/90 mb-6 leading-relaxed text-lg max-w-md mx-auto animate-ad-bounce-in drop-shadow-md" style={{animationDelay: '0.2s'}}>
+                <p className="text-white/90 mb-4 leading-relaxed text-base max-w-md mx-auto animate-ad-bounce-in drop-shadow-md" style={{animationDelay: '0.2s'}}>
                   {data.creative.description || 'Your compelling description will appear here'}
                 </p>
                 
                 {/* Animated CTA Button */}
-                <button className="bg-white text-orange-600 px-8 py-3 text-lg font-bold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse rounded-full border-2 border-white/20 backdrop-blur-sm" style={{animationDelay: '0.4s'}}>
+                <button className="bg-white text-orange-600 px-6 py-2 text-base font-bold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse rounded-full border-2 border-white/20 backdrop-blur-sm" style={{animationDelay: '0.4s'}}>
                   {data.creative.cta || 'Call to Action'}
                 </button>
               </div>
@@ -573,24 +706,26 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
               )}
             </div>
             
+            </div>
+            
             {/* AI-Generated Creative Details */}
             {data.creative.logoConcept && (
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">🎭 Logo Concept</h4>
-                  <p className="text-sm text-gray-600">{data.creative.logoConcept}</p>
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">🎭 Logo Concept</h4>
+                  <p className="text-xs text-gray-600">{data.creative.logoConcept}</p>
                 </div>
                 <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">✨ Animation Style</h4>
-                  <p className="text-sm text-gray-600">{data.creative.animationSuggestion}</p>
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">✨ Animation Style</h4>
+                  <p className="text-xs text-gray-600">{data.creative.animationSuggestion}</p>
                 </div>
                 <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">🎨 Color Scheme</h4>
-                  <p className="text-sm text-gray-600">{data.creative.colorScheme}</p>
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">🎨 Color Scheme</h4>
+                  <p className="text-xs text-gray-600">{data.creative.colorScheme}</p>
                 </div>
                 <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">🖼️ Visual Elements</h4>
-                  <p className="text-sm text-gray-600">{data.creative.visualElements}</p>
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">🖼️ Visual Elements</h4>
+                  <p className="text-xs text-gray-600">{data.creative.visualElements}</p>
                 </div>
               </div>
             )}
