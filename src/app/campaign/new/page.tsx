@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ArrowLeft, ArrowRight, MapPin, Target, Zap, CreditCard, Check, Settings, Sparkles, Map, Eye, DollarSign, Upload, Palette, Monitor, AlertCircle } from 'lucide-react'
 import { formatCurrency, calculateImpressions } from '@/lib/utils'
 import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverLift } from '@/components/ui/animated'
-import MapboxMap from '@/components/MapboxMap'
+import MapProvider from '@/components/MapProvider'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -1002,8 +1002,8 @@ Focus on making the suggestions relevant to what they've actually written, not j
                   <div className="absolute bottom-8 right-8 text-yellow-200 animate-ping text-lg">💫</div>
                 )}
                 
-                {/* Enhanced Flashy Effects During Animation Testing */}
-                {isTestingAnimation && (
+                {/* Enhanced Flashy Effects During Animation Testing or When Applied */}
+                {(isTestingAnimation || appliedAnimation) && (
                   <>
                     {/* Floating Money/Coin Effects for Sales */}
                     {(salePercentage || discountType) && (
@@ -1051,7 +1051,7 @@ Focus on making the suggestions relevant to what they've actually written, not j
               <div className="relative z-10 p-6 text-center">
                 {/* Dynamic Logo - Uploaded, Applied Concept, or Business Type Based */}
                 <div className={`w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg relative overflow-hidden border-2 border-white/30 ${
-                  appliedLogoConcept ? 'animate-ad-bounce-in' : 'animate-ad-glow'
+                  (appliedLogoConcept || appliedAnimation) ? 'animate-ad-bounce-in' : 'animate-ad-glow'
                 }`}>
                   <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
                   {data.creative.logoUrl ? (
@@ -1097,18 +1097,18 @@ Focus on making the suggestions relevant to what they've actually written, not j
                 </div>
                 
                 {/* Animated Headline */}
-                <div className={`mb-3 ${isTestingAnimation ? 'animate-ad-bounce-in' : 'animate-ad-slide-in'}`}>
+                <div className={`mb-3 ${(isTestingAnimation || appliedAnimation) ? 'animate-ad-bounce-in' : 'animate-ad-slide-in'}`}>
                   <h4 className={`font-bold text-2xl mb-2 text-white drop-shadow-lg ${
-                    isTestingAnimation ? 'animate-neon-glow' : 'animate-gradient-shift'
+                    (isTestingAnimation || appliedAnimation) ? 'animate-neon-glow' : 'animate-gradient-shift'
                   }`}>
                     {data.creative.headline || 'Your Headline Here'}
                   </h4>
                   <div className={`w-16 h-1 bg-white/80 mx-auto rounded-full ${
-                    isTestingAnimation ? 'animate-pulse' : 'animate-ad-shimmer'
+                    (isTestingAnimation || appliedAnimation) ? 'animate-pulse' : 'animate-ad-shimmer'
                   }`}></div>
                   
                   {/* Flashy Sale/Discount Effects for Headline */}
-                  {(salePercentage || discountType) && isTestingAnimation && (
+                  {(salePercentage || discountType) && (isTestingAnimation || appliedAnimation) && (
                     <div className="absolute inset-0 pointer-events-none">
                       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent animate-pulse"></div>
                       <div className="absolute top-2 right-2 text-yellow-300 text-lg animate-bounce">💰</div>
@@ -1125,13 +1125,13 @@ Focus on making the suggestions relevant to what they've actually written, not j
                 {/* Animated CTA Button */}
                 <div className="relative">
                   <button className={`bg-white text-orange-600 px-6 py-2 text-base font-bold hover:scale-105 transition-transform duration-300 shadow-xl rounded-full border-2 border-white/20 backdrop-blur-sm ${
-                    isTestingAnimation ? 'animate-flashy-pulse' : 'animate-button-pulse'
+                    (isTestingAnimation || appliedAnimation) ? 'animate-flashy-pulse' : 'animate-button-pulse'
                   }`} style={{animationDelay: '0.4s'}}>
                     {data.creative.cta || 'Call to Action'}
                   </button>
                   
                   {/* Flashy CTA Effects */}
-                  {isTestingAnimation && (
+                  {(isTestingAnimation || appliedAnimation) && (
                     <div className="absolute inset-0 pointer-events-none">
                       {/* Pulsing Ring Effect */}
                       <div className="absolute inset-0 rounded-full border-4 border-yellow-300 animate-ping opacity-75"></div>
@@ -1298,6 +1298,63 @@ Focus on making the suggestions relevant to what they've actually written, not j
 }
 
 function TargetingStep({ data, setData, onLocationSelect }: { data: any, setData: any, onLocationSelect?: (location: any) => void }) {
+  const [aiRecommendations, setAiRecommendations] = useState<any>(null)
+  const [isGeneratingRecommendations, setIsGeneratingRecommendations] = useState(false)
+
+  // Generate AI targeting recommendations
+  const generateTargetingRecommendations = async () => {
+    setIsGeneratingRecommendations(true)
+    try {
+      const response = await fetch('/api/ai/generate-targeting', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          businessType: data.businessType,
+          location: data.location,
+          budget: data.budget,
+          targetRadius: data.targetRadius
+        }),
+      })
+
+      if (response.ok) {
+        const recommendations = await response.json()
+        setAiRecommendations(recommendations)
+      }
+    } catch (error) {
+      console.error('Error generating targeting recommendations:', error)
+      // Fallback recommendations
+      setAiRecommendations({
+        optimalRadius: data.targetRadius,
+        competitorLocations: [
+          { name: 'Competitor A', address: '123 Main St', distance: '0.8km' },
+          { name: 'Competitor B', address: '456 High St', distance: '1.2km' }
+        ],
+        highFootfallRoutes: [
+          { name: 'Oxford Street', type: 'Shopping District', traffic: 'High' },
+          { name: 'King\'s Road', type: 'Commuter Route', traffic: 'Peak Hours' }
+        ],
+        peakHours: ['7-9 AM', '5-7 PM'],
+        recommendations: [
+          'Target high-footfall areas within 1km radius',
+          'Focus on commuter routes during peak hours',
+          'Consider competitor locations for conquesting',
+          'Optimize for weekend traffic patterns'
+        ]
+      })
+    } finally {
+      setIsGeneratingRecommendations(false)
+    }
+  }
+
+  // Generate recommendations on component mount
+  useEffect(() => {
+    if (data.businessType && data.location) {
+      generateTargetingRecommendations()
+    }
+  }, [data.businessType, data.location])
+
   return (
     <StaggerContainer className="space-y-8">
       <StaggerItem>
@@ -1346,40 +1403,163 @@ function TargetingStep({ data, setData, onLocationSelect }: { data: any, setData
             </div>
 
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
-              <h3 className="font-bold text-orange-900 mb-4 flex items-center text-lg">
-                <Target className="w-5 h-5 mr-3" />
-                AI Recommendations
-              </h3>
-              <ul className="text-orange-800 space-y-2">
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                  Target high-footfall areas within 1km radius
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                  Focus on commuter routes during peak hours
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                  Consider competitor locations for conquesting
-                </li>
-                <li className="flex items-center">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                  Optimize for weekend traffic patterns
-                </li>
-              </ul>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-orange-900 flex items-center text-lg">
+                  <Target className="w-5 h-5 mr-3" />
+                  AI Targeting Recommendations
+                </h3>
+                <button
+                  onClick={generateTargetingRecommendations}
+                  disabled={isGeneratingRecommendations}
+                  className="text-xs bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-600 transition-colors disabled:opacity-50"
+                >
+                  {isGeneratingRecommendations ? '🔄 Generating...' : '🔄 Regenerate'}
+                </button>
+              </div>
+              
+              {isGeneratingRecommendations ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                  <p className="text-sm text-orange-700">Analyzing location and generating recommendations...</p>
+                </div>
+              ) : aiRecommendations ? (
+                <div className="space-y-4">
+                  {/* Optimal Radius Recommendation */}
+                  <div className="bg-white rounded-lg p-3 border border-orange-200">
+                    <h4 className="font-semibold text-orange-900 text-sm mb-2">🎯 Optimal Radius</h4>
+                    <p className="text-sm text-orange-800">
+                      Recommended: <span className="font-bold">{aiRecommendations.optimalRadius}km</span> radius for {data.businessType} businesses
+                    </p>
+                  </div>
+
+                  {/* Competitor Locations */}
+                  {aiRecommendations.competitorLocations && aiRecommendations.competitorLocations.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 border border-orange-200">
+                      <h4 className="font-semibold text-orange-900 text-sm mb-2">🏢 Competitor Locations</h4>
+                      <div className="space-y-1">
+                        {aiRecommendations.competitorLocations.map((competitor: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center text-xs">
+                            <span className="text-orange-800">{competitor.name}</span>
+                            <span className="text-orange-600 font-medium">{competitor.distance}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* High Footfall Routes */}
+                  {aiRecommendations.highFootfallRoutes && aiRecommendations.highFootfallRoutes.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 border border-orange-200">
+                      <h4 className="font-semibold text-orange-900 text-sm mb-2">🚶 High Footfall Routes</h4>
+                      <div className="space-y-1">
+                        {aiRecommendations.highFootfallRoutes.map((route: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center text-xs">
+                            <span className="text-orange-800">{route.name}</span>
+                            <span className="text-orange-600 font-medium">{route.traffic}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Peak Hours */}
+                  {aiRecommendations.peakHours && aiRecommendations.peakHours.length > 0 && (
+                    <div className="bg-white rounded-lg p-3 border border-orange-200">
+                      <h4 className="font-semibold text-orange-900 text-sm mb-2">⏰ Peak Hours</h4>
+                      <p className="text-xs text-orange-800">
+                        {aiRecommendations.peakHours.join(', ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* General Recommendations */}
+                  <div className="bg-white rounded-lg p-3 border border-orange-200">
+                    <h4 className="font-semibold text-orange-900 text-sm mb-2">💡 Strategic Recommendations</h4>
+                    <ul className="text-orange-800 space-y-1">
+                      {aiRecommendations.recommendations.map((rec: string, index: number) => (
+                        <li key={index} className="flex items-start text-xs">
+                          <div className="w-1.5 h-1.5 bg-orange-500 rounded-full mr-2 mt-1.5 flex-shrink-0"></div>
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-sm text-orange-700">Enter your business type and location to get AI recommendations</p>
+                </div>
+              )}
             </div>
           </div>
 
           <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border border-orange-200">
-            <h3 className="font-bold text-orange-900 mb-6 text-xl">Targeting Map</h3>
-            <div className="h-80 rounded-2xl overflow-hidden">
-              <MapboxMap
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-orange-900 text-xl">Interactive Targeting Map</h3>
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                  <span className="text-orange-700">Available Screens</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-orange-700">Competitors</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-orange-700">High Traffic</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="h-80 rounded-2xl overflow-hidden relative">
+              <MapProvider
                 targetRadius={data.targetRadius}
                 onLocationSelect={onLocationSelect}
                 className="h-full"
+                showScreens={true}
+                showCompetitors={aiRecommendations?.competitorLocations}
+                showTrafficRoutes={aiRecommendations?.highFootfallRoutes}
               />
+              
+              {/* Map Overlay Info */}
+              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                <div className="text-xs text-gray-600 space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <Target className="w-3 h-3 text-orange-500" />
+                    <span>Radius: {data.targetRadius}km</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="w-3 h-3 text-orange-500" />
+                    <span>Screens: 12 available</span>
+                  </div>
+                  {aiRecommendations && (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                      <span>Coverage: {Math.round(data.targetRadius * 3.14 * 100)}km²</span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+            
+            {/* Map Statistics */}
+            {aiRecommendations && (
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                <div className="bg-white rounded-lg p-3 text-center border border-orange-200">
+                  <div className="text-lg font-bold text-orange-900">12</div>
+                  <div className="text-xs text-orange-600">Available Screens</div>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center border border-orange-200">
+                  <div className="text-lg font-bold text-orange-900">{aiRecommendations.competitorLocations?.length || 0}</div>
+                  <div className="text-xs text-orange-600">Competitors Nearby</div>
+                </div>
+                <div className="bg-white rounded-lg p-3 text-center border border-orange-200">
+                  <div className="text-lg font-bold text-orange-900">{aiRecommendations.highFootfallRoutes?.length || 0}</div>
+                  <div className="text-xs text-orange-600">High Traffic Routes</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </StaggerItem>
