@@ -217,6 +217,109 @@
   }
 }
 
+/* Enhanced Flashy Animations */
+@keyframes flashy-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+  }
+  25% {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 1);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.8);
+  }
+  75% {
+    transform: scale(1.15);
+    box-shadow: 0 0 35px rgba(255, 215, 0, 1);
+  }
+}
+
+@keyframes money-rain {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkle-burst {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes neon-glow {
+  0%, 100% {
+    text-shadow: 
+      0 0 5px #fff,
+      0 0 10px #fff,
+      0 0 15px #ffd700,
+      0 0 20px #ffd700,
+      0 0 35px #ffd700,
+      0 0 40px #ffd700;
+  }
+  50% {
+    text-shadow: 
+      0 0 2px #fff,
+      0 0 5px #fff,
+      0 0 8px #ffd700,
+      0 0 12px #ffd700,
+      0 0 18px #ffd700,
+      0 0 22px #ffd700;
+  }
+}
+
+@keyframes sale-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-10px) scale(1.1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.05);
+  }
+  75% {
+    transform: translateY(-15px) scale(1.15);
+  }
+}
+
+/* Animation Classes */
+.animate-flashy-pulse {
+  animation: flashy-pulse 2s ease-in-out infinite;
+}
+
+.animate-money-rain {
+  animation: money-rain 3s linear infinite;
+}
+
+.animate-sparkle-burst {
+  animation: sparkle-burst 1.5s ease-out infinite;
+}
+
+.animate-neon-glow {
+  animation: neon-glow 2s ease-in-out infinite;
+}
+
+.animate-sale-bounce {
+  animation: sale-bounce 1s ease-in-out infinite;
+}
+
 .animate-gradient-shift {
   background: linear-gradient(45deg, #f97316, #ea580c, #dc2626, #f97316);
   background-size: 400% 400%;

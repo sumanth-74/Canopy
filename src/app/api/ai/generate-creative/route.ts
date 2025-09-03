@@ -12,13 +12,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { prompt, businessType } = body
+    const { prompt, businessType, userContent } = body
 
     if (!prompt || !businessType) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const creative = await generateAdCreative(prompt, businessType)
+    const creative = await generateAdCreative(prompt, businessType, userContent)
 
     return NextResponse.json(creative)
   } catch (error) {

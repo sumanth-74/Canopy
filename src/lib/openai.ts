@@ -21,14 +21,19 @@ try {
 
 export { openai }
 
-export async function generateAdCreative(prompt: string, businessType: string) {
+export async function generateAdCreative(prompt: string, businessType: string, userContent?: any) {
   // Check if OpenAI client is available
   if (!openai) {
     console.warn('🔄 OpenAI not configured, using fallback content')
+    // Use user content if available, otherwise fallback to business type
+    const userHeadline = userContent?.headline || `${businessType} Ultimate Experience`
+    const userDescription = userContent?.description || 'Discover something extraordinary today!'
+    const userCta = userContent?.cta || 'Experience Now'
+    
     return {
-      headline: `${businessType} Ultimate Experience`,
-      description: 'Discover something extraordinary today!',
-      cta: 'Experience Now',
+      headline: userHeadline,
+      description: userDescription,
+      cta: userCta,
       logoConcept: `${businessType} themed logo with modern, clean design`,
       animationSuggestion: 'Smooth fade transitions with subtle animations',
       colorScheme: 'Orange and white with complementary accents',
@@ -47,31 +52,34 @@ export async function generateAdCreative(prompt: string, businessType: string) {
       messages: [
         {
           role: "system",
-          content: `You are a creative advertising genius specializing in eye-catching outdoor advertising for taxi-top digital billboards. Create compelling, professional ad content that includes:
+          content: `You are a creative advertising genius specializing in eye-catching outdoor advertising for taxi-top digital billboards. 
 
-1. A powerful headline (5-8 words max)
-2. An engaging description (15-20 words max)
-3. A strong call-to-action
-4. A suggested logo concept (describe what the logo should look like)
-5. Animation suggestions (how the ad should move/animate)
-6. Color scheme recommendations
-7. Visual elements that would make it stand out
+Your job is to analyze the user's existing content and enhance it with creative suggestions that build upon what they've already written. Focus on:
 
-Make it creative, memorable, and optimized for quick viewing on moving taxi-tops. Use emotional triggers, urgency, exclusivity, or social proof where appropriate.`
+1. Understanding the user's specific business/offer from their content
+2. Enhancing their headline while keeping their core message
+3. Expanding their description with more compelling language
+4. Suggesting a CTA that matches their specific offer
+5. Creating a logo concept that fits their actual business/offer
+6. Recommending animations that complement their content
+7. Suggesting colors that match their brand/offer
+8. Adding visual elements that enhance their specific message
+
+Always build upon what the user has written rather than replacing it with generic content. Make suggestions that are relevant to their specific business, offer, or product.`
         },
         {
           role: "user",
-          content: `Create a complete, creative ad concept for a ${businessType} business. Requirements: ${prompt}.
+          content: `${prompt}
 
 Return your response in this exact JSON format:
 {
-  "headline": "Your catchy headline here",
-  "description": "Your engaging description here",
-  "cta": "Your compelling call-to-action",
-  "logoConcept": "Describe the logo design concept",
-  "animationSuggestion": "How the ad should animate",
-  "colorScheme": "Primary and secondary colors",
-  "visualElements": "Additional visual elements"
+  "headline": "Enhanced headline based on user's input",
+  "description": "Improved description building on user's content",
+  "cta": "Better CTA that matches their offer",
+  "logoConcept": "Logo concept that fits their specific business/offer",
+  "animationSuggestion": "Animation that complements their content",
+  "colorScheme": "Colors that match their brand/offer",
+  "visualElements": "Visual elements that enhance their message"
 }`
         }
       ],
@@ -119,10 +127,15 @@ Return your response in this exact JSON format:
     }
   } catch (error) {
     console.error('Error generating ad creative:', error)
+    // Use user content if available, otherwise fallback to business type
+    const userHeadline = userContent?.headline || `${businessType} Ultimate Experience`
+    const userDescription = userContent?.description || 'Discover something extraordinary today!'
+    const userCta = userContent?.cta || 'Experience Now'
+    
     return {
-      headline: `${businessType} Ultimate Experience`,
-      description: 'Discover something extraordinary today!',
-      cta: 'Experience Now',
+      headline: userHeadline,
+      description: userDescription,
+      cta: userCta,
       logoConcept: `${businessType} themed logo with modern, clean design`,
       animationSuggestion: 'Smooth fade transitions with subtle animations',
       colorScheme: 'Orange and white with complementary accents',

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { ArrowLeft, ArrowRight, MapPin, Target, Zap, CreditCard, Check, Settings, Sparkles, Map, Eye, DollarSign } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { ArrowLeft, ArrowRight, MapPin, Target, Zap, CreditCard, Check, Settings, Sparkles, Map, Eye, DollarSign, Upload, Palette, Monitor, AlertCircle } from 'lucide-react'
 import { formatCurrency, calculateImpressions } from '@/lib/utils'
 import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverLift } from '@/components/ui/animated'
 import MapboxMap from '@/components/MapboxMap'
@@ -26,10 +26,18 @@ export default function NewCampaignPage() {
       cta: '',
       colors: ['#f97316', '#FFFFFF'],
       logo: null as File | null,
+      logoUrl: '',
       logoConcept: '',
       animationSuggestion: '',
       colorScheme: '',
-      visualElements: ''
+      visualElements: '',
+      screenFormat: 'taxi-top',
+      maxCharacters: 50,
+      currentCharacters: 0,
+      appliedLogoConcept: '',
+      appliedAnimation: '',
+      salePercentage: '',
+      discountType: ''
     }
   })
   const [errors, setErrors] = useState<{[key: string]: string}>({})
@@ -461,6 +469,144 @@ function CampaignSetupStep({ data, setData, errors, clearError }: { data: any, s
 
 function AICreationStep({ data, setData, errors, clearError }: { data: any, setData: any, errors: any, clearError: (field: string) => void }) {
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const [previewAnimation, setPreviewAnimation] = useState('')
+  const [isTestingAnimation, setIsTestingAnimation] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Use persistent state from campaignData
+  const appliedLogoConcept = data.creative.appliedLogoConcept || ''
+  const appliedAnimation = data.creative.appliedAnimation || ''
+  const salePercentage = data.creative.salePercentage || ''
+  const discountType = data.creative.discountType || ''
+  
+
+  
+  // Logo upload handler
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast.error('Logo file must be smaller than 2MB')
+        return
+      }
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file')
+        return
+      }
+      
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setData({
+          ...data,
+          creative: {
+            ...data.creative,
+            logo: file,
+            logoUrl: e.target?.result as string
+          }
+        })
+        toast.success('Logo uploaded successfully!')
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Apply logo concept to preview (persistent)
+  const handleApplyLogoConcept = () => {
+    if (data.creative.logoConcept) {
+      setData({
+        ...data,
+        creative: {
+          ...data.creative,
+          appliedLogoConcept: data.creative.logoConcept
+        }
+      })
+      toast.success('Logo concept applied! Click "Remove" to revert.')
+    }
+  }
+
+  // Remove applied logo concept
+  const handleRemoveLogoConcept = () => {
+    setData({
+      ...data,
+      creative: {
+        ...data.creative,
+        appliedLogoConcept: ''
+      }
+    })
+    toast.success('Logo concept removed!')
+  }
+
+  // Apply animation from AI suggestions (persistent)
+  const handleApplyAISuggestion = () => {
+    if (data.creative.animationSuggestion) {
+      setData({
+        ...data,
+        creative: {
+          ...data.creative,
+          appliedAnimation: data.creative.animationSuggestion
+        }
+      })
+      setIsTestingAnimation(true)
+      toast.success('AI animation applied! Click "Remove" to revert.')
+    }
+  }
+
+  // Remove applied animation
+  const handleRemoveAnimation = () => {
+    setData({
+      ...data,
+      creative: {
+        ...data.creative,
+        appliedAnimation: ''
+      }
+    })
+    setIsTestingAnimation(false)
+    toast.success('Animation removed!')
+  }
+
+  // Test animation from AI suggestions (temporary preview)
+  const handleTestAISuggestion = () => {
+    if (data.creative.animationSuggestion) {
+      setIsTestingAnimation(true)
+      toast.success('Testing AI animation suggestion!')
+      // Show animation for 5 seconds with more flashy effects
+      setTimeout(() => {
+        setIsTestingAnimation(false)
+      }, 5000)
+    }
+  }
+
+  // Test current animation settings (temporary preview)
+  const handleTestCurrentAnimation = () => {
+    setPreviewAnimation('test')
+    setIsTestingAnimation(true)
+    toast.success('Testing current animation!')
+    // Show animation for 5 seconds with more flashy effects
+    setTimeout(() => {
+      setPreviewAnimation('')
+      setIsTestingAnimation(false)
+    }, 5000)
+  }
+  
+  // Color picker handler
+  const handleColorChange = (color: string, index: number) => {
+    const newColors = [...data.creative.colors]
+    newColors[index] = color
+    setData({
+      ...data,
+      creative: {
+        ...data.creative,
+        colors: newColors
+      }
+    })
+  }
+  
+  // Screen format validation
+  const validateScreenFormat = (text: string) => {
+    const maxChars = data.creative.maxCharacters
+    return text.length <= maxChars
+  }
 
   const generateWithAI = async () => {
     setIsGenerating(true)
@@ -471,8 +617,30 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: `Create compelling ad copy for ${data.businessType} business. Focus on outdoor advertising for taxi-top screens.`,
-          businessType: data.businessType
+          prompt: `Based on the user's input, create enhanced ad creative suggestions for taxi-top screen advertising. 
+          
+User's Current Content:
+- Headline: "${data.creative.headline || 'Not provided'}"
+- Description: "${data.creative.description || 'Not provided'}"
+- CTA: "${data.creative.cta || 'Not provided'}"
+- Business Type: "${data.businessType}"
+
+Please analyze the user's content and provide:
+1. Enhanced headline that builds on their input
+2. Improved description that expands on their offer
+3. Better CTA that matches their content
+4. Logo concept that fits their specific business/offer
+5. Animation suggestions that complement their content
+6. Color scheme that matches their brand/offer
+7. Visual elements that enhance their message
+
+Focus on making the suggestions relevant to what they've actually written, not just generic business type content.`,
+          businessType: data.businessType,
+          userContent: {
+            headline: data.creative.headline,
+            description: data.creative.description,
+            cta: data.creative.cta
+          }
         }),
       })
 
@@ -491,23 +659,25 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
           logoConcept: creative.logoConcept,
           animationSuggestion: creative.animationSuggestion,
           colorScheme: creative.colorScheme,
-          visualElements: creative.visualElements
+          visualElements: creative.visualElements,
+          currentCharacters: (creative.headline?.length || 0) + (creative.description?.length || 0) + (creative.cta?.length || 0)
         }
       })
     } catch (error) {
       console.error('Error generating creative:', error)
-      // Fallback to default content
+      // Fallback to user's existing content with enhancements
       setData({
         ...data,
         creative: {
           ...data.creative,
-          headline: `${data.businessType} Special Offer`,
-          description: 'Visit us today for amazing deals and great service!',
-          cta: 'Visit Now',
+          headline: data.creative.headline || `${data.businessType} Special Offer`,
+          description: data.creative.description || 'Visit us today for amazing deals and great service!',
+          cta: data.creative.cta || 'Visit Now',
           logoConcept: `${data.businessType} themed logo with modern design`,
           animationSuggestion: 'Smooth fade transitions with pulsing CTA button',
           colorScheme: 'Orange and white with complementary accents',
-          visualElements: 'Professional imagery with motion graphics'
+          visualElements: 'Professional imagery with motion graphics',
+          currentCharacters: (data.creative.headline?.length || 0) + (data.creative.description?.length || 0) + (data.creative.cta?.length || 0)
         }
       })
     } finally {
@@ -528,6 +698,94 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Left Column - Form Fields */}
           <div className="xl:col-span-1 space-y-6">
+            {/* Logo Upload Section */}
+            <div>
+              <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
+                Logo Upload
+              </label>
+              <div className="border-2 border-dashed border-orange-200 rounded-lg p-4 text-center hover:border-orange-300 transition-colors">
+                {data.creative.logoUrl ? (
+                  <div className="space-y-2">
+                    <img src={data.creative.logoUrl} alt="Uploaded logo" className="w-16 h-16 mx-auto object-contain rounded" />
+                    <p className="text-sm text-green-600">Logo uploaded successfully!</p>
+                    <button
+                      onClick={() => setData({...data, creative: {...data.creative, logo: null, logoUrl: ''}})}
+                      className="text-xs text-red-500 hover:text-red-700"
+                    >
+                      Remove logo
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-8 h-8 mx-auto text-orange-400" />
+                    <p className="text-sm text-gray-600">Click to upload logo</p>
+                    <p className="text-xs text-gray-500">Max 2MB, PNG/JPG</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-xs bg-orange-100 text-orange-600 px-3 py-1 rounded hover:bg-orange-200 transition-colors"
+                    >
+                      Choose File
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Color Picker Section */}
+            <div>
+              <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
+                Brand Colors
+              </label>
+              <div className="flex items-center space-x-3">
+                {data.creative.colors.map((color: string, index: number) => (
+                  <div key={index} className="relative">
+                    <div
+                      className="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer hover:scale-110 transition-transform"
+                      style={{ backgroundColor: color }}
+                      onClick={() => setShowColorPicker(!showColorPicker)}
+                    />
+                    {showColorPicker && (
+                      <div className="absolute top-12 left-0 z-10 bg-white p-2 rounded-lg shadow-lg border">
+                        <input
+                          type="color"
+                          value={color}
+                          onChange={(e) => handleColorChange(e.target.value, index)}
+                          className="w-8 h-8 border-0 rounded cursor-pointer"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => setShowColorPicker(!showColorPicker)}
+                  className="flex items-center space-x-1 text-sm text-orange-600 hover:text-orange-700"
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>Customize</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Screen Format Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center space-x-2 mb-2">
+                <Monitor className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-semibold text-blue-800">Taxi-Top Screen Format</span>
+              </div>
+              <div className="text-xs text-blue-700 space-y-1">
+                <p>• Max characters: {data.creative.maxCharacters}</p>
+                <p>• Current: {data.creative.currentCharacters}</p>
+                <p>• Optimized for outdoor visibility</p>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-semibold text-orange-600 mb-3 uppercase tracking-wide">
                 Headline *
@@ -536,7 +794,15 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
                 type="text"
                 value={data.creative.headline}
                 onChange={(e) => {
-                  setData({...data, creative: {...data.creative, headline: e.target.value}})
+                  const newValue = e.target.value
+                  setData({
+                    ...data, 
+                    creative: {
+                      ...data.creative, 
+                      headline: newValue,
+                      currentCharacters: newValue.length + data.creative.description.length + data.creative.cta.length
+                    }
+                  })
                   clearError('headline')
                 }}
                 placeholder="Enter your headline"
@@ -552,11 +818,19 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
               <textarea
                 value={data.creative.description}
                 onChange={(e) => {
-                  setData({...data, creative: {...data.creative, description: e.target.value}})
+                  const newValue = e.target.value
+                  setData({
+                    ...data, 
+                    creative: {
+                      ...data.creative, 
+                      description: newValue,
+                      currentCharacters: data.creative.headline.length + newValue.length + data.creative.cta.length
+                    }
+                  })
                   clearError('description')
                 }}
                 placeholder="Describe your offer or business"
-                rows={3}
+                rows={4}
                 className={`canopy-input resize-none ${errors.description ? 'border-red-500 focus:border-red-500' : ''}`}
               />
               {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
@@ -569,7 +843,15 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
               <select
                 value={data.creative.cta}
                 onChange={(e) => {
-                  setData({...data, creative: {...data.creative, cta: e.target.value}})
+                  const newValue = e.target.value
+                  setData({
+                    ...data, 
+                    creative: {
+                      ...data.creative, 
+                      cta: newValue,
+                      currentCharacters: data.creative.headline.length + data.creative.description.length + newValue.length
+                    }
+                  })
                   clearError('cta')
                 }}
                 className={`canopy-input ${errors.cta ? 'border-red-500 focus:border-red-500' : ''}`}
@@ -580,8 +862,68 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
                 <option value="Book Online">Book Online</option>
                 <option value="Learn More">Learn More</option>
                 <option value="Get Quote">Get Quote</option>
+                <option value="Shop Now">Shop Now</option>
+                <option value="Order Online">Order Online</option>
+                <option value="Book Today">Book Today</option>
               </select>
               {errors.cta && <p className="text-red-500 text-sm mt-1">{errors.cta}</p>}
+            </div>
+
+            {/* Optional Sale/Discount Fields */}
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-orange-700 mb-3 flex items-center">
+                🏷️ Sale & Discount (Optional)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-orange-600 mb-2 uppercase tracking-wide">
+                    Sale Percentage
+                  </label>
+                  <input
+                    type="number"
+                    value={salePercentage}
+                    onChange={(e) => setData({
+                      ...data,
+                      creative: {
+                        ...data.creative,
+                        salePercentage: e.target.value
+                      }
+                    })}
+                    placeholder="e.g., 50"
+                    min="1"
+                    max="99"
+                    className="canopy-input text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Enter percentage (1-99)</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-orange-600 mb-2 uppercase tracking-wide">
+                    Discount Type
+                  </label>
+                  <select
+                    value={discountType}
+                    onChange={(e) => setData({
+                      ...data,
+                      creative: {
+                        ...data.creative,
+                        discountType: e.target.value
+                      }
+                    })}
+                    className="canopy-input text-sm"
+                  >
+                    <option value="">Select discount type</option>
+                    <option value="OFF">OFF</option>
+                    <option value="SALE">SALE</option>
+                    <option value="DISCOUNT">DISCOUNT</option>
+                    <option value="CLEARANCE">CLEARANCE</option>
+                    <option value="SPECIAL">SPECIAL</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Choose discount type</p>
+                </div>
+              </div>
+              <div className="mt-3 text-xs text-orange-600">
+                <p>💡 These will appear as badges in the ad corners when filled</p>
+              </div>
             </div>
 
             <HoverLift>
@@ -603,6 +945,25 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
                 </div>
               </button>
             </HoverLift>
+
+            {/* Preview Animation Controls */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-gray-700">Preview Effects</span>
+                <button
+                  onClick={handleTestCurrentAnimation}
+                  className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded hover:bg-orange-200 transition-colors"
+                >
+                  {isTestingAnimation ? '🎬 Testing...' : 'Test Animation'}
+                </button>
+              </div>
+              <div className="text-xs text-gray-600">
+                <p>• Real-time character count tracking</p>
+                <p>• Screen format validation</p>
+                <p>• Live color updates</p>
+                <p>• Logo integration</p>
+              </div>
+            </div>
           </div>
 
           {/* Right Column - Live Preview and AI Details */}
@@ -610,9 +971,11 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
             {/* Live Preview */}
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border border-orange-200">
               <h3 className="font-bold text-orange-900 mb-4 text-lg">Live Preview</h3>
-            {/* Dynamic Ad Background Based on AI Suggestions */}
+            {/* Dynamic Ad Background Based on Custom Colors or AI Suggestions */}
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-300" style={{
-              background: data.creative.colorScheme?.includes('blue') ? 
+              background: data.creative.colors && data.creative.colors.length >= 2 ? 
+                `linear-gradient(135deg, ${data.creative.colors[0]} 0%, ${data.creative.colors[1]} 50%, ${data.creative.colors[0]} 100%)` :
+                data.creative.colorScheme?.includes('blue') ? 
                 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)' :
                 data.creative.colorScheme?.includes('green') ? 
                 'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)' :
@@ -638,32 +1001,120 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
                 {data.creative.visualElements?.includes('trail') && (
                   <div className="absolute bottom-8 right-8 text-yellow-200 animate-ping text-lg">💫</div>
                 )}
+                
+                {/* Enhanced Flashy Effects During Animation Testing */}
+                {isTestingAnimation && (
+                  <>
+                    {/* Floating Money/Coin Effects for Sales */}
+                    {(salePercentage || discountType) && (
+                      <>
+                        <div className="absolute top-8 left-8 text-yellow-300 text-2xl animate-money-rain">💰</div>
+                        <div className="absolute top-12 right-12 text-yellow-300 text-xl animate-money-rain" style={{animationDelay: '0.5s'}}>💸</div>
+                        <div className="absolute bottom-12 left-12 text-yellow-300 text-xl animate-money-rain" style={{animationDelay: '1s'}}>💵</div>
+                        <div className="absolute bottom-8 right-8 text-yellow-300 text-2xl animate-money-rain" style={{animationDelay: '1.5s'}}>💎</div>
+                        <div className="absolute top-1/2 left-1/4 text-yellow-300 text-xl animate-sparkle-burst" style={{animationDelay: '2s'}}>✨</div>
+                        <div className="absolute top-1/3 right-1/3 text-yellow-300 text-lg animate-sparkle-burst" style={{animationDelay: '2.5s'}}>⭐</div>
+                      </>
+                    )}
+                    
+                    {/* General Flashy Effects */}
+                    <div className="absolute top-1/4 left-1/4 text-white text-3xl animate-ping opacity-60">✨</div>
+                    <div className="absolute top-3/4 right-1/4 text-white text-2xl animate-ping opacity-60" style={{animationDelay: '0.3s'}}>⭐</div>
+                    <div className="absolute top-1/2 left-1/2 text-white text-2xl animate-ping opacity-60" style={{animationDelay: '0.6s'}}>💫</div>
+                    
+                    {/* Pulsing Background Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+                  </>
+                )}
               </div>
               
+              {/* Sale/Discount Badges in Corners */}
+              {(salePercentage || discountType) && (
+                <>
+                  {/* Top Right Corner - Discount Type Badge */}
+                  {discountType && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-sale-bounce border-2 border-white shadow-lg z-20">
+                      {discountType}!
+                    </div>
+                  )}
+                  
+                  {/* Top Left Corner - Percent Off Badge */}
+                  {salePercentage && (
+                    <div className="absolute top-2 left-2 bg-yellow-400 text-red-600 text-xs font-bold px-2 py-1 rounded-full animate-sale-bounce border border-white shadow-lg z-20">
+                      {salePercentage}% OFF
+                    </div>
+                  )}
+                </>
+              )}
+
               {/* Ad Content */}
               <div className="relative z-10 p-6 text-center">
-                {/* Dynamic Logo Based on Business Type */}
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden border-2 border-white/30">
+                {/* Dynamic Logo - Uploaded, Applied Concept, or Business Type Based */}
+                <div className={`w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg relative overflow-hidden border-2 border-white/30 ${
+                  appliedLogoConcept ? 'animate-ad-bounce-in' : 'animate-ad-glow'
+                }`}>
                   <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
-                  <span className="text-white font-bold text-xl relative z-10 animate-logo-spin drop-shadow-lg">
-                    {data.businessType === 'Restaurant & Food' ? '🍽️' :
-                     data.businessType === 'Retail & Shopping' ? '🛍️' :
-                     data.businessType === 'Health & Beauty' ? '💄' :
-                     data.businessType === 'Professional Services' ? '💼' :
-                     data.businessType === 'Entertainment' ? '🎬' :
-                     data.businessType === 'Technology' ? '💻' :
-                     data.businessType === 'Real Estate' ? '🏠' :
-                     data.businessType === 'Automotive' ? '🚗' :
-                     '🚀'}
-                  </span>
+                  {data.creative.logoUrl ? (
+                    <img 
+                      src={data.creative.logoUrl} 
+                      alt="Business logo" 
+                      className="w-12 h-12 object-contain relative z-10 animate-logo-spin drop-shadow-lg rounded-full"
+                    />
+                  ) : appliedLogoConcept ? (
+                    <div className="text-white font-bold text-3xl animate-logo-spin drop-shadow-lg">
+                      {appliedLogoConcept.includes('arrow') ? '⬆️' :
+                       appliedLogoConcept.includes('star') ? '⭐' :
+                       appliedLogoConcept.includes('circle') ? '⭕' :
+                       appliedLogoConcept.includes('diamond') ? '💎' :
+                       appliedLogoConcept.includes('heart') ? '❤️' :
+                       appliedLogoConcept.includes('shield') ? '🛡️' :
+                       appliedLogoConcept.includes('crown') ? '👑' :
+                       appliedLogoConcept.includes('lightning') ? '⚡' :
+                       appliedLogoConcept.includes('fire') ? '🔥' :
+                       appliedLogoConcept.includes('rocket') ? '🚀' :
+                       appliedLogoConcept.includes('food') ? '🍽️' :
+                       appliedLogoConcept.includes('shopping') ? '🛍️' :
+                       appliedLogoConcept.includes('beauty') ? '💄' :
+                       appliedLogoConcept.includes('service') ? '💼' :
+                       appliedLogoConcept.includes('entertainment') ? '🎬' :
+                       appliedLogoConcept.includes('tech') ? '💻' :
+                       appliedLogoConcept.includes('real estate') ? '🏠' :
+                       appliedLogoConcept.includes('auto') ? '🚗' : '✨'}
+                    </div>
+                  ) : (
+                    <span className="text-white font-bold text-xl relative z-10 animate-logo-spin drop-shadow-lg">
+                      {data.businessType === 'Restaurant & Food' ? '🍽️' :
+                       data.businessType === 'Retail & Shopping' ? '🛍️' :
+                       data.businessType === 'Health & Beauty' ? '💄' :
+                       data.businessType === 'Professional Services' ? '💼' :
+                       data.businessType === 'Entertainment' ? '🎬' :
+                       data.businessType === 'Technology' ? '💻' :
+                       data.businessType === 'Real Estate' ? '🏠' :
+                       data.businessType === 'Automotive' ? '🚗' :
+                       '🚀'}
+                    </span>
+                  )}
                 </div>
                 
                 {/* Animated Headline */}
-                <div className="mb-3 animate-ad-slide-in">
-                  <h4 className="font-bold text-2xl mb-2 text-white drop-shadow-lg animate-gradient-shift">
+                <div className={`mb-3 ${isTestingAnimation ? 'animate-ad-bounce-in' : 'animate-ad-slide-in'}`}>
+                  <h4 className={`font-bold text-2xl mb-2 text-white drop-shadow-lg ${
+                    isTestingAnimation ? 'animate-neon-glow' : 'animate-gradient-shift'
+                  }`}>
                     {data.creative.headline || 'Your Headline Here'}
                   </h4>
-                  <div className="w-16 h-1 bg-white/80 mx-auto rounded-full animate-ad-shimmer"></div>
+                  <div className={`w-16 h-1 bg-white/80 mx-auto rounded-full ${
+                    isTestingAnimation ? 'animate-pulse' : 'animate-ad-shimmer'
+                  }`}></div>
+                  
+                  {/* Flashy Sale/Discount Effects for Headline */}
+                  {(salePercentage || discountType) && isTestingAnimation && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent animate-pulse"></div>
+                      <div className="absolute top-2 right-2 text-yellow-300 text-lg animate-bounce">💰</div>
+                      <div className="absolute bottom-2 left-2 text-yellow-300 text-lg animate-bounce">🎉</div>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Engaging Description */}
@@ -672,9 +1123,28 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
                 </p>
                 
                 {/* Animated CTA Button */}
-                <button className="bg-white text-orange-600 px-6 py-2 text-base font-bold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse rounded-full border-2 border-white/20 backdrop-blur-sm" style={{animationDelay: '0.4s'}}>
-                  {data.creative.cta || 'Call to Action'}
-                </button>
+                <div className="relative">
+                  <button className={`bg-white text-orange-600 px-6 py-2 text-base font-bold hover:scale-105 transition-transform duration-300 shadow-xl rounded-full border-2 border-white/20 backdrop-blur-sm ${
+                    isTestingAnimation ? 'animate-flashy-pulse' : 'animate-button-pulse'
+                  }`} style={{animationDelay: '0.4s'}}>
+                    {data.creative.cta || 'Call to Action'}
+                  </button>
+                  
+                  {/* Flashy CTA Effects */}
+                  {isTestingAnimation && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {/* Pulsing Ring Effect */}
+                      <div className="absolute inset-0 rounded-full border-4 border-yellow-300 animate-ping opacity-75"></div>
+                      <div className="absolute inset-0 rounded-full border-2 border-yellow-400 animate-pulse"></div>
+                      
+                      {/* Sparkle Effects */}
+                      <div className="absolute -top-2 -left-2 text-yellow-300 text-sm animate-bounce">✨</div>
+                      <div className="absolute -top-2 -right-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '0.5s'}}>✨</div>
+                      <div className="absolute -bottom-2 -left-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '1s'}}>✨</div>
+                      <div className="absolute -bottom-2 -right-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '1.5s'}}>✨</div>
+                    </div>
+                  )}
+                </div>
               </div>
               
               {/* Special Effects Based on AI Suggestions */}
@@ -708,24 +1178,115 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
             
             </div>
             
-            {/* AI-Generated Creative Details */}
+            {/* Enhanced AI-Generated Creative Details */}
             {data.creative.logoConcept && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">🎭 Logo Concept</h4>
-                  <p className="text-xs text-gray-600">{data.creative.logoConcept}</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-orange-900">AI Creative Insights</h3>
+                  <div className="flex items-center space-x-2 text-sm text-orange-600">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Powered by AI</span>
+                  </div>
                 </div>
-                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">✨ Animation Style</h4>
-                  <p className="text-xs text-gray-600">{data.creative.animationSuggestion}</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white/90 rounded-xl p-4 border border-orange-200 hover:shadow-md transition-shadow">
+                    <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">
+                      🎭 Logo Concept
+                      <span className="ml-2 text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">AI Suggestion</span>
+                    </h4>
+                    <p className="text-xs text-gray-600 mb-2">{data.creative.logoConcept}</p>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={appliedLogoConcept ? handleRemoveLogoConcept : handleApplyLogoConcept}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          appliedLogoConcept 
+                            ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                            : 'text-orange-600 hover:text-orange-700 underline'
+                        }`}
+                      >
+                        {appliedLogoConcept ? 'Remove' : 'Apply to preview'}
+                      </button>
+                      {appliedLogoConcept && (
+                        <span className="text-xs text-green-600 font-semibold">✓ Applied</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/90 rounded-xl p-4 border border-orange-200 hover:shadow-md transition-shadow">
+                    <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">
+                      ✨ Animation Style
+                      <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Live Preview</span>
+                    </h4>
+                    <p className="text-xs text-gray-600 mb-2">{data.creative.animationSuggestion}</p>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={appliedAnimation ? handleRemoveAnimation : handleApplyAISuggestion}
+                        className={`text-xs px-2 py-1 rounded transition-colors ${
+                          appliedAnimation 
+                            ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                            : 'text-orange-600 hover:text-orange-700 underline'
+                        }`}
+                      >
+                        {appliedAnimation ? 'Remove' : 'Apply animation'}
+                      </button>
+                      <button 
+                        onClick={handleTestAISuggestion}
+                        className="text-xs text-blue-600 hover:text-blue-700 underline transition-colors"
+                      >
+                        {isTestingAnimation && !appliedAnimation ? '🎬 Testing...' : 'Test preview'}
+                      </button>
+                      {appliedAnimation && (
+                        <span className="text-xs text-green-600 font-semibold">✓ Applied</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/90 rounded-xl p-4 border border-orange-200 hover:shadow-md transition-shadow">
+                    <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">
+                      🎨 Color Scheme
+                      <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Applied</span>
+                    </h4>
+                    <p className="text-xs text-gray-600 mb-2">{data.creative.colorScheme}</p>
+                    <div className="flex space-x-1 mt-2">
+                      {data.creative.colors.map((color: string, index: number) => (
+                        <div key={index} className="w-4 h-4 rounded-full border border-gray-300" style={{ backgroundColor: color }} />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/90 rounded-xl p-4 border border-orange-200 hover:shadow-md transition-shadow">
+                    <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">
+                      🖼️ Visual Elements
+                      <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Active</span>
+                    </h4>
+                    <p className="text-xs text-gray-600 mb-2">{data.creative.visualElements}</p>
+                    <div className="flex space-x-1 mt-2">
+                      {data.creative.visualElements?.includes('stars') && <span className="text-sm">⭐</span>}
+                      {data.creative.visualElements?.includes('arrow') && <span className="text-sm">⬆️</span>}
+                      {data.creative.visualElements?.includes('motion') && <span className="text-sm">✨</span>}
+                      {data.creative.visualElements?.includes('trail') && <span className="text-sm">💫</span>}
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">🎨 Color Scheme</h4>
-                  <p className="text-xs text-gray-600">{data.creative.colorScheme}</p>
-                </div>
-                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
-                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center text-sm">🖼️ Visual Elements</h4>
-                  <p className="text-xs text-gray-600">{data.creative.visualElements}</p>
+                
+                {/* Screen Format Validation */}
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-green-800 text-sm flex items-center">
+                      <Monitor className="w-4 h-4 mr-2" />
+                      Screen Format Validation
+                    </h4>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                      {data.creative.currentCharacters <= data.creative.maxCharacters ? 'Valid' : 'Over Limit'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-green-700 space-y-1">
+                    <p>• Format: Taxi-top screen optimized</p>
+                    <p>• Visibility: High contrast for outdoor viewing</p>
+                    <p>• Animation: Smooth transitions for attention</p>
+                    <p>• Layout: Mobile-first responsive design</p>
+                  </div>
                 </div>
               </div>
             )}
