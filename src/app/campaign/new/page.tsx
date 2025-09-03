@@ -24,8 +24,12 @@ export default function NewCampaignPage() {
       headline: '',
       description: '',
       cta: '',
-      colors: ['#3B82F6', '#FFFFFF'],
-      logo: null as File | null
+      colors: ['#f97316', '#FFFFFF'],
+      logo: null as File | null,
+      logoConcept: '',
+      animationSuggestion: '',
+      colorScheme: '',
+      visualElements: ''
     }
   })
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
@@ -366,7 +370,11 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
           ...data.creative,
           headline: creative.headline,
           description: creative.description,
-          cta: creative.cta
+          cta: creative.cta,
+          logoConcept: creative.logoConcept,
+          animationSuggestion: creative.animationSuggestion,
+          colorScheme: creative.colorScheme,
+          visualElements: creative.visualElements
         }
       })
     } catch (error) {
@@ -378,7 +386,11 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
           ...data.creative,
           headline: `${data.businessType} Special Offer`,
           description: 'Visit us today for amazing deals and great service!',
-          cta: 'Visit Now'
+          cta: 'Visit Now',
+          logoConcept: `${data.businessType} themed logo with modern design`,
+          animationSuggestion: 'Smooth fade transitions with pulsing CTA button',
+          colorScheme: 'Orange and white with complementary accents',
+          visualElements: 'Professional imagery with motion graphics'
         }
       })
     } finally {
@@ -465,22 +477,123 @@ function AICreationStep({ data, setData }: { data: any, setData: any }) {
 
           <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-8 border border-orange-200">
             <h3 className="font-bold text-orange-900 mb-6 text-xl">Live Preview</h3>
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-orange-200">
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-orange-200 to-orange-300 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <span className="text-orange-600 font-bold text-2xl">L</span>
+            {/* Dynamic Ad Background Based on AI Suggestions */}
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-300" style={{
+              background: data.creative.colorScheme?.includes('blue') ? 
+                'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)' :
+                data.creative.colorScheme?.includes('green') ? 
+                'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)' :
+                data.creative.colorScheme?.includes('purple') ? 
+                'linear-gradient(135deg, #581c87 0%, #8b5cf6 50%, #a78bfa 100%)' :
+                data.creative.colorScheme?.includes('red') ? 
+                'linear-gradient(135deg, #991b1b 0%, #ef4444 50%, #f87171 100%)' :
+                data.creative.colorScheme?.includes('gold') ? 
+                'linear-gradient(135deg, #92400e 0%, #f59e0b 50%, #fbbf24 100%)' :
+                'linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)'
+            }}>
+              {/* Animated Background Elements */}
+              <div className="absolute inset-0 opacity-20">
+                {data.creative.visualElements?.includes('stars') && (
+                  <div className="absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">⭐</div>
+                )}
+                {data.creative.visualElements?.includes('arrow') && (
+                  <div className="absolute top-8 left-8 text-white animate-bounce text-3xl">⬆️</div>
+                )}
+                {data.creative.visualElements?.includes('motion') && (
+                  <div className="absolute bottom-4 left-4 text-white animate-pulse text-xl">✨</div>
+                )}
+                {data.creative.visualElements?.includes('trail') && (
+                  <div className="absolute bottom-8 right-8 text-yellow-200 animate-ping text-lg">💫</div>
+                )}
+              </div>
+              
+              {/* Ad Content */}
+              <div className="relative z-10 p-8 text-center">
+                {/* Dynamic Logo Based on Business Type */}
+                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden border-2 border-white/30">
+                  <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
+                  <span className="text-white font-bold text-2xl relative z-10 animate-logo-spin drop-shadow-lg">
+                    {data.businessType === 'Restaurant & Food' ? '🍽️' :
+                     data.businessType === 'Retail & Shopping' ? '🛍️' :
+                     data.businessType === 'Health & Beauty' ? '💄' :
+                     data.businessType === 'Professional Services' ? '💼' :
+                     data.businessType === 'Entertainment' ? '🎬' :
+                     data.businessType === 'Technology' ? '💻' :
+                     data.businessType === 'Real Estate' ? '🏠' :
+                     data.businessType === 'Automotive' ? '🚗' :
+                     '🚀'}
+                  </span>
                 </div>
-                <h4 className="font-bold text-xl mb-3 text-gray-900">
-                  {data.creative.headline || 'Your Headline'}
-                </h4>
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  {data.creative.description || 'Your description will appear here'}
+                
+                {/* Animated Headline */}
+                <div className="mb-4 animate-ad-slide-in">
+                  <h4 className="font-bold text-3xl mb-2 text-white drop-shadow-lg animate-gradient-shift">
+                    {data.creative.headline || 'Your Headline Here'}
+                  </h4>
+                  <div className="w-20 h-1 bg-white/80 mx-auto rounded-full animate-ad-shimmer"></div>
+                </div>
+                
+                {/* Engaging Description */}
+                <p className="text-white/90 mb-6 leading-relaxed text-lg max-w-md mx-auto animate-ad-bounce-in drop-shadow-md" style={{animationDelay: '0.2s'}}>
+                  {data.creative.description || 'Your compelling description will appear here'}
                 </p>
-                <button className="canopy-button px-8 py-3">
+                
+                {/* Animated CTA Button */}
+                <button className="bg-white text-orange-600 px-8 py-3 text-lg font-bold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse rounded-full border-2 border-white/20 backdrop-blur-sm" style={{animationDelay: '0.4s'}}>
                   {data.creative.cta || 'Call to Action'}
                 </button>
               </div>
+              
+              {/* Special Effects Based on AI Suggestions */}
+              {data.creative.animationSuggestion?.includes('trail') && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-300 to-transparent animate-pulse opacity-60"></div>
+                </div>
+              )}
+              
+              {/* Professional Services Special Effects */}
+              {data.businessType === 'Professional Services' && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-4 left-1/4 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
+                  <div className="absolute top-8 right-1/4 w-1 h-1 bg-yellow-200 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+                  <div className="absolute bottom-4 left-1/3 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+                  {/* Star trail effect for Professional Services */}
+                  <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-300 to-transparent animate-pulse opacity-40"></div>
+                </div>
+              )}
+              
+              {/* Star Effects for any business with stars in visual elements */}
+              {data.creative.visualElements?.includes('stars') && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute top-6 left-6 text-yellow-300 animate-pulse text-lg">⭐</div>
+                  <div className="absolute top-12 right-12 text-yellow-200 animate-ping text-sm">✨</div>
+                  <div className="absolute bottom-6 right-6 text-yellow-300 animate-pulse text-lg">⭐</div>
+                  <div className="absolute bottom-12 left-12 text-yellow-200 animate-ping text-sm">✨</div>
+                </div>
+              )}
             </div>
+            
+            {/* AI-Generated Creative Details */}
+            {data.creative.logoConcept && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">🎭 Logo Concept</h4>
+                  <p className="text-sm text-gray-600">{data.creative.logoConcept}</p>
+                </div>
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">✨ Animation Style</h4>
+                  <p className="text-sm text-gray-600">{data.creative.animationSuggestion}</p>
+                </div>
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">🎨 Color Scheme</h4>
+                  <p className="text-sm text-gray-600">{data.creative.colorScheme}</p>
+                </div>
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">🖼️ Visual Elements</h4>
+                  <p className="text-sm text-gray-600">{data.creative.visualElements}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </StaggerItem>
@@ -618,17 +731,164 @@ function ReviewStep({ data, estimatedImpressions }: { data: any, estimatedImpres
             </div>
 
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-8 border border-orange-200">
-              <h3 className="font-bold text-orange-900 mb-6 text-xl">Creative Preview</h3>
-              <div className="bg-white rounded-2xl p-8 shadow-lg border border-orange-200">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-orange-200 to-orange-300 rounded-full mx-auto mb-6 flex items-center justify-center">
-                    <span className="text-orange-600 font-bold text-2xl">L</span>
+              <h3 className="font-bold text-orange-900 mb-6 text-xl">🎨 Creative Preview</h3>
+
+              {/* Main Ad Preview with Dynamic Background */}
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-300 mb-6" style={{
+                background: data.creative.colorScheme?.includes('blue') ? 
+                  'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)' :
+                  data.creative.colorScheme?.includes('green') ? 
+                  'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)' :
+                  data.creative.colorScheme?.includes('purple') ? 
+                  'linear-gradient(135deg, #581c87 0%, #8b5cf6 50%, #a78bfa 100%)' :
+                  data.creative.colorScheme?.includes('red') ? 
+                  'linear-gradient(135deg, #991b1b 0%, #ef4444 50%, #f87171 100%)' :
+                  data.creative.colorScheme?.includes('gold') ? 
+                  'linear-gradient(135deg, #92400e 0%, #f59e0b 50%, #fbbf24 100%)' :
+                  'linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)'
+              }}>
+                {/* Animated Background Elements */}
+                <div className="absolute inset-0 opacity-20">
+                  {data.creative.visualElements?.includes('stars') && (
+                    <div className="absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">⭐</div>
+                  )}
+                  {data.creative.visualElements?.includes('arrow') && (
+                    <div className="absolute top-8 left-8 text-white animate-bounce text-3xl">⬆️</div>
+                  )}
+                  {data.creative.visualElements?.includes('motion') && (
+                    <div className="absolute bottom-4 left-4 text-white animate-pulse text-xl">✨</div>
+                  )}
+                  {data.creative.visualElements?.includes('trail') && (
+                    <div className="absolute bottom-8 right-8 text-yellow-200 animate-ping text-lg">💫</div>
+                  )}
+                </div>
+                
+                {/* Ad Content */}
+                <div className="relative z-10 p-8 text-center">
+                  {/* Dynamic Logo Based on Concept */}
+                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden border-2 border-white/30">
+                    <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
+                    <span className="text-white font-bold text-2xl relative z-10 animate-logo-spin drop-shadow-lg">
+                      {data.businessType === 'Restaurant & Food' ? '🍽️' :
+                       data.businessType === 'Retail & Shopping' ? '🛍️' :
+                       data.businessType === 'Health & Beauty' ? '💄' :
+                       data.businessType === 'Professional Services' ? '💼' :
+                       data.businessType === 'Entertainment' ? '🎬' :
+                       data.businessType === 'Technology' ? '💻' :
+                       data.businessType === 'Real Estate' ? '🏠' :
+                       data.businessType === 'Automotive' ? '🚗' :
+                       '🚀'}
+                    </span>
                   </div>
-                  <h4 className="font-bold text-xl mb-3 text-gray-900">{data.creative.headline}</h4>
-                  <p className="text-gray-600 mb-6 leading-relaxed">{data.creative.description}</p>
-                  <button className="canopy-button px-8 py-3">
-                    {data.creative.cta}
+
+                  {/* Animated Headline */}
+                  <div className="mb-4 animate-ad-slide-in">
+                    <h4 className="font-bold text-3xl mb-2 text-white drop-shadow-lg animate-gradient-shift">
+                      {data.creative.headline || 'Your Headline Here'}
+                    </h4>
+                    <div className="w-20 h-1 bg-white/80 mx-auto rounded-full animate-ad-shimmer"></div>
+                  </div>
+
+                  {/* Engaging Description */}
+                  <p className="text-white/90 mb-6 leading-relaxed text-lg max-w-md mx-auto animate-ad-bounce-in drop-shadow-md" style={{animationDelay: '0.2s'}}>
+                    {data.creative.description || 'Your compelling description will appear here'}
+                  </p>
+
+                  {/* Animated CTA Button */}
+                  <button className="bg-white text-orange-600 px-8 py-3 text-lg font-bold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse rounded-full border-2 border-white/20 backdrop-blur-sm" style={{animationDelay: '0.4s'}}>
+                    {data.creative.cta || 'Call to Action'}
                   </button>
+                </div>
+                
+                {/* Special Effects Based on AI Suggestions */}
+                {data.creative.animationSuggestion?.includes('trail') && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-300 to-transparent animate-pulse opacity-60"></div>
+                  </div>
+                )}
+                
+                {/* Professional Services Special Effects */}
+                {data.businessType === 'Professional Services' && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-4 left-1/4 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
+                    <div className="absolute top-8 right-1/4 w-1 h-1 bg-yellow-200 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+                    <div className="absolute bottom-4 left-1/3 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+                    {/* Star trail effect for Professional Services */}
+                    <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-300 to-transparent animate-pulse opacity-40"></div>
+                  </div>
+                )}
+                
+                {/* Star Effects for any business with stars in visual elements */}
+                {data.creative.visualElements?.includes('stars') && (
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-6 left-6 text-yellow-300 animate-pulse text-lg">⭐</div>
+                    <div className="absolute top-12 right-12 text-yellow-200 animate-ping text-sm">✨</div>
+                    <div className="absolute bottom-6 right-6 text-yellow-300 animate-pulse text-lg">⭐</div>
+                    <div className="absolute bottom-12 left-12 text-yellow-200 animate-ping text-sm">✨</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Creative Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">
+                    🎭 Logo Concept
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {data.creative.logoConcept || 'Modern, clean design with business-specific elements'}
+                  </p>
+                </div>
+
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">
+                    🎬 Animation Style
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {data.creative.animationSuggestion || 'Smooth transitions with engaging motion'}
+                  </p>
+                </div>
+
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">
+                    🎨 Color Scheme
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {data.creative.colorScheme || 'Orange and white with complementary accents'}
+                  </p>
+                </div>
+
+                <div className="bg-white/80 rounded-xl p-4 border border-orange-200">
+                  <h4 className="font-semibold text-orange-900 mb-2 flex items-center">
+                    ✨ Visual Elements
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {data.creative.visualElements || 'Professional imagery with motion graphics'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Professional Ad Mockup */}
+              <div className="mt-6 bg-gradient-to-r from-gray-900 to-black rounded-2xl p-6 text-white">
+                <div className="text-center">
+                  <div className="text-xs text-gray-400 mb-2">OUTDOOR ADVERTISING PREVIEW</div>
+                  <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-2 rounded-lg inline-block mb-4">
+                    TAXI-TOP DIGITAL BILLBOARD
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <div className="text-2xl mb-1">🚗</div>
+                      <div className="text-xs text-gray-300">Moving Display</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl mb-1">👁️</div>
+                      <div className="text-xs text-gray-300">High Visibility</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl mb-1">🎯</div>
+                      <div className="text-xs text-gray-300">Targeted Reach</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

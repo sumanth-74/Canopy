@@ -31,7 +31,11 @@ export default function DemoCampaignDetailsPage({ params }: { params: { id: stri
       headline: 'Summer Sale - 50% Off Everything!',
       description: 'Don\'t miss out on our biggest sale of the year. Visit us today!',
       cta: 'Shop Now',
-      colors: ['#3B82F6', '#FFFFFF', '#1E40AF']
+      colors: ['#f97316', '#FFFFFF', '#ea580c'],
+      logoConcept: 'Modern shopping bag icon with orange gradient and clean typography',
+      animationSuggestion: 'Smooth slide-in from left with pulsing discount badge and bounce effect on CTA',
+      colorScheme: 'Vibrant orange and white with subtle shadow effects',
+      visualElements: 'Sale tags, discount percentages, and shopping cart icons with motion graphics'
     }
   }
 
@@ -220,38 +224,83 @@ export default function DemoCampaignDetailsPage({ params }: { params: { id: stri
 
               <div className="canopy-card canopy-card-hover">
                 <div className="border-b border-orange-100 pb-4 mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">Creative Preview</h3>
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                    🎨 Creative Preview
+                    <span className="ml-2 text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">AI Generated</span>
+                  </h3>
                 </div>
                 <div>
-                  <div className="bg-gray-900 rounded-lg p-4">
-                    <div
-                      className="bg-white rounded-lg p-4 text-center"
-                      style={{
-                        background: `linear-gradient(135deg, ${campaign.creative.colors[0]}20, ${campaign.creative.colors[1]}20)`
-                      }}
-                    >
-                      <div
-                        className="w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center text-white font-bold canopy-gradient"
-                      >
-                        LOGO
+                  {/* Enhanced Ad Preview */}
+                  <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-6 mb-4 overflow-hidden relative">
+                    {/* Animated background elements */}
+                    <div className="absolute top-0 left-0 w-full h-full opacity-10">
+                      <div className="absolute top-4 left-4 w-8 h-8 bg-orange-500 rounded-full animate-ping"></div>
+                      <div className="absolute top-8 right-8 w-6 h-6 bg-orange-400 rounded-full animate-pulse"></div>
+                      <div className="absolute bottom-4 left-1/4 w-4 h-4 bg-orange-300 rounded-full animate-bounce"></div>
+                    </div>
+
+                    <div className="relative z-10 bg-white/95 backdrop-blur-sm rounded-2xl p-6 text-center shadow-2xl border border-orange-200">
+                      {/* Dynamic Logo */}
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden">
+                        <div className="absolute inset-0 animate-ad-shimmer rounded-2xl"></div>
+                        <span className="text-white font-bold text-xl relative z-10 animate-logo-spin">🛍️</span>
                       </div>
-                      <h4
-                        className="font-bold text-lg mb-2"
-                        style={{ color: campaign.creative.colors[0] }}
-                      >
-                        {campaign.creative.headline}
-                      </h4>
-                      <p
-                        className="text-gray-600 mb-3 text-sm"
-                        style={{ color: campaign.creative.colors[2] || '#6B7280' }}
-                      >
+
+                      {/* Animated Headline */}
+                      <div className="mb-4 animate-ad-slide-in">
+                        <h4 className="font-bold text-2xl mb-2 text-gray-900 animate-gradient-shift">
+                          {campaign.creative.headline}
+                        </h4>
+                        <div className="w-20 h-1 bg-gradient-to-r from-orange-400 to-orange-600 mx-auto rounded-full animate-ad-shimmer"></div>
+                      </div>
+
+                      {/* Engaging Description */}
+                      <p className="text-gray-700 mb-4 text-base leading-relaxed animate-ad-bounce-in" style={{animationDelay: '0.2s'}}>
                         {campaign.creative.description}
                       </p>
-                      <button
-                        className="px-4 py-2 rounded-lg font-medium text-white canopy-gradient hover:opacity-90 smooth-transition"
-                      >
+
+                      {/* Animated CTA */}
+                      <button className="canopy-button px-6 py-3 font-semibold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse" style={{animationDelay: '0.4s'}}>
                         {campaign.creative.cta}
                       </button>
+
+                      {/* Sale Badge */}
+                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
+                        SALE!
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Creative Details */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                      <h5 className="font-semibold text-orange-900 text-sm mb-1">🎭 Logo</h5>
+                      <p className="text-xs text-gray-600">{campaign.creative.logoConcept}</p>
+                    </div>
+
+                    <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                      <h5 className="font-semibold text-orange-900 text-sm mb-1">🎬 Animation</h5>
+                      <p className="text-xs text-gray-600">{campaign.creative.animationSuggestion}</p>
+                    </div>
+
+                    <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                      <h5 className="font-semibold text-orange-900 text-sm mb-1">🎨 Colors</h5>
+                      <p className="text-xs text-gray-600">{campaign.creative.colorScheme}</p>
+                    </div>
+
+                    <div className="bg-orange-50 rounded-lg p-3 border border-orange-200">
+                      <h5 className="font-semibold text-orange-900 text-sm mb-1">✨ Visuals</h5>
+                      <p className="text-xs text-gray-600">{campaign.creative.visualElements}</p>
+                    </div>
+                  </div>
+
+                  {/* Billboard Mockup */}
+                  <div className="mt-4 bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-4 text-white text-center">
+                    <div className="text-xs text-gray-400 mb-2">🚗 TAXI-TOP DISPLAY</div>
+                    <div className="flex justify-center space-x-4 text-sm">
+                      <span>📍 London</span>
+                      <span>👁️ 10k+ views/day</span>
+                      <span>🎯 Targeted</span>
                     </div>
                   </div>
                 </div>

@@ -309,45 +309,120 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
 
               <div className="canopy-card canopy-card-hover">
                 <div className="border-b border-orange-100 pb-4 mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">Creative Preview</h3>
+                  <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                    🎨 Creative Preview
+                    <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">AI Generated</span>
+                  </h3>
                 </div>
                 <div>
                   {campaign.creative ? (
-                    <div className="bg-gray-900 rounded-lg p-4">
-                      <div
-                        className="bg-white rounded-lg p-4 text-center"
-                        style={{
-                          background: `linear-gradient(135deg, ${campaign.creative.colors?.[0] || '#f97316'}20, ${campaign.creative.colors?.[1] || '#FFFFFF'}20)`
-                        }}
-                      >
-                        <div
-                          className="w-12 h-12 rounded-lg mx-auto mb-3 flex items-center justify-center text-white font-bold canopy-gradient"
-                        >
-                          LOGO
+                    <>
+                      {/* Enhanced Ad Preview */}
+                      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-6 mb-4 overflow-hidden relative">
+                        {/* Animated background elements */}
+                        <div className="absolute top-0 left-0 w-full h-full opacity-10">
+                          <div className="absolute top-4 left-4 w-8 h-8 bg-orange-500 rounded-full animate-ping"></div>
+                          <div className="absolute top-8 right-8 w-6 h-6 bg-orange-400 rounded-full animate-pulse"></div>
+                          <div className="absolute bottom-4 left-1/4 w-4 h-4 bg-orange-300 rounded-full animate-bounce"></div>
                         </div>
-                        <h4
-                          className="font-bold text-lg mb-2"
-                          style={{ color: campaign.creative.colors?.[0] || '#f97316' }}
-                        >
-                          {campaign.creative.headline || 'Your Ad Headline'}
-                        </h4>
-                        <p
-                          className="text-gray-600 mb-3 text-sm"
-                          style={{ color: campaign.creative.colors?.[2] || '#6B7280' }}
-                        >
-                          {campaign.creative.description || 'Your ad description will appear here'}
-                        </p>
-                        <button
-                          className="px-4 py-2 rounded-lg font-medium text-white canopy-gradient hover:opacity-90 smooth-transition"
-                        >
-                          {campaign.creative.cta || 'Call to Action'}
-                        </button>
+
+                        <div className="relative z-10 bg-white/95 backdrop-blur-sm rounded-2xl p-6 text-center shadow-2xl border border-orange-200">
+                          {/* Dynamic Logo Based on Business Type */}
+                          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden">
+                            <div className="absolute inset-0 animate-ad-shimmer rounded-2xl"></div>
+                            <span className="text-white font-bold text-xl relative z-10 animate-logo-spin">
+                              {campaign.creative.businessTypeEmoji ||
+                               (campaign.businessType?.toLowerCase().includes('restaurant') ? '🍽️' :
+                                campaign.businessType?.toLowerCase().includes('retail') ? '🛍️' :
+                                campaign.businessType?.toLowerCase().includes('fitness') ? '💪' :
+                                campaign.businessType?.toLowerCase().includes('tech') ? '💻' :
+                                campaign.businessType?.toLowerCase().includes('health') ? '🏥' :
+                                campaign.businessType?.toLowerCase().includes('education') ? '📚' :
+                                campaign.businessType?.toLowerCase().includes('finance') ? '💰' :
+                                campaign.businessType?.toLowerCase().includes('travel') ? '✈️' :
+                                '🚀')}
+                            </span>
+                          </div>
+
+                          {/* Animated Headline */}
+                          <div className="mb-4 animate-ad-slide-in">
+                            <h4 className="font-bold text-2xl mb-2 text-gray-900 animate-gradient-shift">
+                              {campaign.creative.headline || 'Your Ad Headline'}
+                            </h4>
+                            <div className="w-20 h-1 bg-gradient-to-r from-orange-400 to-orange-600 mx-auto rounded-full animate-ad-shimmer"></div>
+                          </div>
+
+                          {/* Engaging Description */}
+                          <p className="text-gray-700 mb-4 text-base leading-relaxed animate-ad-bounce-in" style={{animationDelay: '0.2s'}}>
+                            {campaign.creative.description || 'Your compelling ad description appears here'}
+                          </p>
+
+                          {/* Animated CTA */}
+                          <button className="canopy-button px-6 py-3 font-semibold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse" style={{animationDelay: '0.4s'}}>
+                            {campaign.creative.cta || 'Call to Action'}
+                          </button>
+
+                          {/* Special Badge */}
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
+                            NEW!
+                          </div>
+                        </div>
                       </div>
-                    </div>
+
+                      {/* Creative Details */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                          <h5 className="font-semibold text-green-900 text-sm mb-1 flex items-center">
+                            🎭 Logo Concept
+                          </h5>
+                          <p className="text-xs text-gray-600">
+                            {campaign.creative.logoConcept || 'Modern, clean design with business-specific elements'}
+                          </p>
+                        </div>
+
+                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                          <h5 className="font-semibold text-blue-900 text-sm mb-1 flex items-center">
+                            🎬 Animation Style
+                          </h5>
+                          <p className="text-xs text-gray-600">
+                            {campaign.creative.animationSuggestion || 'Smooth transitions with engaging motion'}
+                          </p>
+                        </div>
+
+                        <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                          <h5 className="font-semibold text-purple-900 text-sm mb-1 flex items-center">
+                            🎨 Color Scheme
+                          </h5>
+                          <p className="text-xs text-gray-600">
+                            {campaign.creative.colorScheme || 'Orange and white with complementary accents'}
+                          </p>
+                        </div>
+
+                        <div className="bg-pink-50 rounded-lg p-3 border border-pink-200">
+                          <h5 className="font-semibold text-pink-900 text-sm mb-1 flex items-center">
+                            ✨ Visual Elements
+                          </h5>
+                          <p className="text-xs text-gray-600">
+                            {campaign.creative.visualElements || 'Professional imagery with motion graphics'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Billboard Simulation */}
+                      <div className="mt-4 bg-gradient-to-r from-gray-800 to-gray-900 rounded-lg p-4 text-white text-center">
+                        <div className="text-xs text-gray-400 mb-2">🚗 LIVE TAXI-TOP DISPLAY</div>
+                        <div className="flex justify-center space-x-4 text-sm">
+                          <span>📍 {campaign.targetLocation || 'Your Location'}</span>
+                          <span>👁️ {Math.floor((campaign.impressions || 0) / 7)} views/day</span>
+                          <span>🎯 {campaign.targetRadius}km radius</span>
+                        </div>
+                      </div>
+                    </>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <Settings className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                       <p>No creative data available</p>
+                      <p className="text-sm text-gray-400 mt-2">Generate creative content to see your ad preview</p>
                     </div>
                   )}
                 </div>
