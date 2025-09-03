@@ -1568,6 +1568,12 @@ function TargetingStep({ data, setData, onLocationSelect }: { data: any, setData
 }
 
 function ReviewStep({ data, estimatedImpressions }: { data: any, estimatedImpressions: number }) {
+  // Use persistent state from campaignData (same as Step 2)
+  const appliedLogoConcept = data.creative.appliedLogoConcept || ''
+  const appliedAnimation = data.creative.appliedAnimation || ''
+  const salePercentage = data.creative.salePercentage || ''
+  const discountType = data.creative.discountType || ''
+
   return (
     <StaggerContainer className="space-y-8">
       <StaggerItem>
@@ -1609,21 +1615,23 @@ function ReviewStep({ data, estimatedImpressions }: { data: any, estimatedImpres
             <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl p-8 border border-orange-200">
               <h3 className="font-bold text-orange-900 mb-6 text-xl">🎨 Creative Preview</h3>
 
-              {/* Main Ad Preview with Dynamic Background */}
+              {/* Main Ad Preview with Dynamic Background - Same as Step 2 */}
               <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-300 mb-6" style={{
-                background: data.creative.colorScheme?.includes('blue') ? 
+                background: data.creative.colors && data.creative.colors.length >= 2 ? 
+                  `linear-gradient(135deg, ${data.creative.colors[0]} 0%, ${data.creative.colors[1]} 50%, ${data.creative.colors[0]} 100%)` :
+                  data.creative.colorScheme?.includes('blue') ? 
                   'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)' :
                   data.creative.colorScheme?.includes('green') ? 
                   'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)' :
                   data.creative.colorScheme?.includes('purple') ? 
                   'linear-gradient(135deg, #581c87 0%, #8b5cf6 50%, #a78bfa 100%)' :
-                  data.creative.colorScheme?.includes('red') ? 
+                  data.creative.colorScheme?.includes('red') ?
                   'linear-gradient(135deg, #991b1b 0%, #ef4444 50%, #f87171 100%)' :
                   data.creative.colorScheme?.includes('gold') ? 
                   'linear-gradient(135deg, #92400e 0%, #f59e0b 50%, #fbbf24 100%)' :
                   'linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)'
               }}>
-                {/* Animated Background Elements */}
+
                 <div className="absolute inset-0 opacity-20">
                   {data.creative.visualElements?.includes('stars') && (
                     <div className="absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">⭐</div>
@@ -1637,43 +1645,150 @@ function ReviewStep({ data, estimatedImpressions }: { data: any, estimatedImpres
                   {data.creative.visualElements?.includes('trail') && (
                     <div className="absolute bottom-8 right-8 text-yellow-200 animate-ping text-lg">💫</div>
                   )}
+                  
+                  {/* Enhanced Flashy Effects When Animation is Applied */}
+                  {appliedAnimation && (
+                    <>
+                      {/* Floating Money/Coin Effects for Sales */}
+                      {(salePercentage || discountType) && (
+                        <>
+                          <div className="absolute top-8 left-8 text-yellow-300 text-2xl animate-money-rain">💰</div>
+                          <div className="absolute top-12 right-12 text-yellow-300 text-xl animate-money-rain" style={{animationDelay: '0.5s'}}>💸</div>
+                          <div className="absolute bottom-12 left-12 text-yellow-300 text-xl animate-money-rain" style={{animationDelay: '1s'}}>💵</div>
+                          <div className="absolute bottom-8 right-8 text-yellow-300 text-2xl animate-money-rain" style={{animationDelay: '1.5s'}}>💎</div>
+                          <div className="absolute top-1/2 left-1/4 text-yellow-300 text-xl animate-sparkle-burst" style={{animationDelay: '2s'}}>✨</div>
+                          <div className="absolute top-1/3 right-1/3 text-yellow-300 text-lg animate-sparkle-burst" style={{animationDelay: '2.5s'}}>⭐</div>
+                        </>
+                      )}
+                      
+                      {/* General Flashy Effects */}
+                      <div className="absolute top-1/4 left-1/4 text-white text-3xl animate-ping opacity-60">✨</div>
+                      <div className="absolute top-3/4 right-1/4 text-white text-2xl animate-ping opacity-60" style={{animationDelay: '0.3s'}}>⭐</div>
+                      <div className="absolute top-1/2 left-1/2 text-white text-2xl animate-ping opacity-60" style={{animationDelay: '0.6s'}}>💫</div>
+                      
+                      {/* Pulsing Background Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+                    </>
+                  )}
                 </div>
                 
-                {/* Ad Content */}
-                <div className="relative z-10 p-8 text-center">
-                  {/* Dynamic Logo Based on Concept */}
-                  <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-6 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden border-2 border-white/30">
-                    <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
-                    <span className="text-white font-bold text-2xl relative z-10 animate-logo-spin drop-shadow-lg">
-                      {data.businessType === 'Restaurant & Food' ? '🍽️' :
-                       data.businessType === 'Retail & Shopping' ? '🛍️' :
-                       data.businessType === 'Health & Beauty' ? '💄' :
-                       data.businessType === 'Professional Services' ? '💼' :
-                       data.businessType === 'Entertainment' ? '🎬' :
-                       data.businessType === 'Technology' ? '💻' :
-                       data.businessType === 'Real Estate' ? '🏠' :
-                       data.businessType === 'Automotive' ? '🚗' :
-                       '🚀'}
-                    </span>
-                  </div>
+                {/* Sale/Discount Badges in Corners */}
+                {(salePercentage || discountType) && (
+                  <>
+                    {/* Top Right Corner - Discount Type Badge */}
+                    {discountType && (
+                      <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-sale-bounce border-2 border-white shadow-lg z-20">
+                        {discountType}!
+                      </div>
+                    )}
+                    
+                    {/* Top Left Corner - Percent Off Badge */}
+                    {salePercentage && (
+                      <div className="absolute top-2 left-2 bg-yellow-400 text-red-600 text-xs font-bold px-2 py-1 rounded-full animate-sale-bounce border border-white shadow-lg z-20">
+                        {salePercentage}% OFF
+                      </div>
+                    )}
+                  </>
+                )}
 
+                {/* Ad Content */}
+                <div className="relative z-10 p-6 text-center">
+                  {/* Dynamic Logo - Uploaded, Applied Concept, or Business Type Based */}
+                  <div className={`w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg relative overflow-hidden border-2 border-white/30 ${
+                    (appliedLogoConcept || appliedAnimation) ? 'animate-ad-bounce-in' : 'animate-ad-glow'
+                  }`}>
+                    <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
+                    {data.creative.logoUrl ? (
+                      <img 
+                        src={data.creative.logoUrl} 
+                        alt="Business logo" 
+                        className="w-12 h-12 object-contain relative z-10 animate-logo-spin drop-shadow-lg rounded-full"
+                      />
+                    ) : appliedLogoConcept ? (
+                      <div className="text-white font-bold text-3xl animate-logo-spin drop-shadow-lg">
+                        {appliedLogoConcept.includes('arrow') ? '⬆️' :
+                         appliedLogoConcept.includes('star') ? '⭐' :
+                         appliedLogoConcept.includes('circle') ? '⭕' :
+                         appliedLogoConcept.includes('diamond') ? '💎' :
+                         appliedLogoConcept.includes('heart') ? '❤️' :
+                         appliedLogoConcept.includes('shield') ? '🛡️' :
+                         appliedLogoConcept.includes('crown') ? '👑' :
+                         appliedLogoConcept.includes('lightning') ? '⚡' :
+                         appliedLogoConcept.includes('fire') ? '🔥' :
+                         appliedLogoConcept.includes('rocket') ? '🚀' :
+                         appliedLogoConcept.includes('food') ? '🍽️' :
+                         appliedLogoConcept.includes('shopping') ? '🛍️' :
+                         appliedLogoConcept.includes('beauty') ? '💄' :
+                         appliedLogoConcept.includes('service') ? '💼' :
+                         appliedLogoConcept.includes('entertainment') ? '🎬' :
+                         appliedLogoConcept.includes('tech') ? '💻' :
+                         appliedLogoConcept.includes('real estate') ? '🏠' :
+                         appliedLogoConcept.includes('auto') ? '🚗' : '✨'}
+                      </div>
+                    ) : (
+                      <span className="text-white font-bold text-xl relative z-10 animate-logo-spin drop-shadow-lg">
+                        {data.businessType === 'Restaurant & Food' ? '🍽️' :
+                         data.businessType === 'Retail & Shopping' ? '🛍️' :
+                         data.businessType === 'Health & Beauty' ? '💄' :
+                         data.businessType === 'Professional Services' ? '💼' :
+                         data.businessType === 'Entertainment' ? '🎬' :
+                         data.businessType === 'Technology' ? '💻' :
+                         data.businessType === 'Real Estate' ? '🏠' :
+                         data.businessType === 'Automotive' ? '🚗' :
+                         '🚀'}
+                      </span>
+                    )}
+                  </div>
+                  
                   {/* Animated Headline */}
-                  <div className="mb-4 animate-ad-slide-in">
-                    <h4 className="font-bold text-3xl mb-2 text-white drop-shadow-lg animate-gradient-shift">
+                  <div className={`mb-3 ${appliedAnimation ? 'animate-ad-bounce-in' : 'animate-ad-slide-in'}`}>
+                    <h4 className={`font-bold text-2xl mb-2 text-white drop-shadow-lg ${
+                      appliedAnimation ? 'animate-neon-glow' : 'animate-gradient-shift'
+                    }`}>
                       {data.creative.headline || 'Your Headline Here'}
                     </h4>
-                    <div className="w-20 h-1 bg-white/80 mx-auto rounded-full animate-ad-shimmer"></div>
+                    <div className={`w-16 h-1 bg-white/80 mx-auto rounded-full ${
+                      appliedAnimation ? 'animate-pulse' : 'animate-ad-shimmer'
+                    }`}></div>
+                    
+                    {/* Flashy Sale/Discount Effects for Headline */}
+                    {(salePercentage || discountType) && appliedAnimation && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent animate-pulse"></div>
+                        <div className="absolute top-2 right-2 text-yellow-300 text-lg animate-bounce">💰</div>
+                        <div className="absolute bottom-2 left-2 text-yellow-300 text-lg animate-bounce">🎉</div>
+                      </div>
+                    )}
                   </div>
-
+                  
                   {/* Engaging Description */}
-                  <p className="text-white/90 mb-6 leading-relaxed text-lg max-w-md mx-auto animate-ad-bounce-in drop-shadow-md" style={{animationDelay: '0.2s'}}>
+                  <p className="text-white/90 mb-4 leading-relaxed text-base max-w-md mx-auto animate-ad-bounce-in drop-shadow-md" style={{animationDelay: '0.2s'}}>
                     {data.creative.description || 'Your compelling description will appear here'}
                   </p>
-
+                  
                   {/* Animated CTA Button */}
-                  <button className="bg-white text-orange-600 px-8 py-3 text-lg font-bold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse rounded-full border-2 border-white/20 backdrop-blur-sm" style={{animationDelay: '0.4s'}}>
-                    {data.creative.cta || 'Call to Action'}
-                  </button>
+                  <div className="relative">
+                    <button className={`bg-white text-orange-600 px-6 py-2 text-base font-bold hover:scale-105 transition-transform duration-300 shadow-xl rounded-full border-2 border-white/20 backdrop-blur-sm ${
+                      appliedAnimation ? 'animate-flashy-pulse' : 'animate-button-pulse'
+                    }`} style={{animationDelay: '0.4s'}}>
+                      {data.creative.cta || 'Call to Action'}
+                    </button>
+                    
+                    {/* Flashy CTA Effects */}
+                    {appliedAnimation && (
+                      <div className="absolute inset-0 pointer-events-none">
+                        {/* Pulsing Ring Effect */}
+                        <div className="absolute inset-0 rounded-full border-4 border-yellow-300 animate-ping opacity-75"></div>
+                        <div className="absolute inset-0 rounded-full border-2 border-yellow-400 animate-pulse"></div>
+                        
+                        {/* Sparkle Effects */}
+                        <div className="absolute -top-2 -left-2 text-yellow-300 text-sm animate-bounce">✨</div>
+                        <div className="absolute -top-2 -right-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '0.5s'}}>✨</div>
+                        <div className="absolute -bottom-2 -left-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '1s'}}>✨</div>
+                        <div className="absolute -bottom-2 -right-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '1.5s'}}>✨</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Special Effects Based on AI Suggestions */}
