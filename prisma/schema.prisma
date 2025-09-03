@@ -1,0 +1,177 @@
+// This is your Prisma schema file for SQLite (easier for testing)
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // For credentials auth
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // User profile fields
+  businessName  String?
+  businessType  String?
+  phone         String?
+  address       String?
+  city          String?
+  country       String?
+  
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  campaigns     Campaign[]
+  payments      Payment[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String @default("DRAFT")
+  budget      Float
+  spent       Float    @default(0)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Targeting
+  targetLocation String
+  targetRadius   Float
+  targetAudience String? // Store targeting preferences as JSON string
+  
+  // Creative
+  creative       String   // Store ad creative data as JSON string
+  
+  // Performance metrics
+  impressions    Int    @default(0)
+  reach          Int    @default(0)
+  clicks         Int    @default(0)
+  conversions    Int    @default(0)
+  
+  // Relations
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments       Payment[]
+  analytics      Analytics[]
+  screens        CampaignScreen[]
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Float
+  currency      String        @default("GBP")
+  status        String @default("PENDING")
+  paymentMethod String
+  stripePaymentId String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaignId    String
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model Analytics {
+  id          String   @id @default(cuid())
+  date        DateTime
+  impressions Int      @default(0)
+  reach       Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  spend       Float    @default(0)
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+}
+
+model Screen {
+  id          String   @id @default(cuid())
+  name        String
+  location    String
+  latitude    Float
+  longitude   Float
+  status      String @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Screen specifications
+  width       Int
+  height      Int
+  resolution  String
+  brightness  Int      @default(100)
+  
+  // Relations
+  campaigns   CampaignScreen[]
+}
+
+model CampaignScreen {
+  id         String   @id @default(cuid())
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  screenId   String
+  screen     Screen   @relation(fields: [screenId], references: [id], onDelete: Cascade)
+  
+  @@unique([campaignId, screenId, startDate])
+}
+
+// Enums converted to strings for SQLite compatibility
+// CampaignStatus: DRAFT, PENDING, ACTIVE, PAUSED, COMPLETED, CANCELLED
+// PaymentStatus: PENDING, PROCESSING, COMPLETED, FAILED, REFUNDED
+// ScreenStatus: ACTIVE, INACTIVE, MAINTENANCE, OFFLINE
