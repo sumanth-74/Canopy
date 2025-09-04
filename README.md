@@ -2,6 +2,8 @@
 
 Canopy is the world's first self-serve outdoor advertising platform, making taxi-top digital billboard advertising as easy as Google Ads. Built with Next.js 14, TypeScript, and modern web technologies.
 
+> **Latest Update**: Fixed Vercel deployment issues and Prisma configuration for production deployment.
+
 ## 🚀 Features
 
 - **AI-Powered Ad Creation**: Generate compelling ad copy with OpenAI integration
@@ -283,5 +285,6 @@ For support and questions:
 
 ---
 
-Built with ❤️ using Next.js, TypeScript, and modern web technologies.#   F o r c e   V e r c e l   r e d e p l o y  
+Built with ❤️ using Next.js, TypeScript, and modern web technologies.#   F o r c e   V e r c e l   r e d e p l o y 
+ 
  
