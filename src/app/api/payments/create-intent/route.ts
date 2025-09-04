@@ -43,6 +43,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Check if Stripe is available
+    if (!stripe) {
+      return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 })
+    }
+
     // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: formatAmountForStripe(parseFloat(amount), currency),
