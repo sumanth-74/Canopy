@@ -55,6 +55,11 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
       if (response.ok) {
         setCampaign({ ...campaign, status: newStatus })
         toast.success(`Campaign ${newStatus.toLowerCase()} successfully!`)
+        
+        // Refresh dashboard if available
+        if (typeof window !== 'undefined' && (window as any).refreshDashboard) {
+          (window as any).refreshDashboard()
+        }
       } else {
         toast.error('Failed to update campaign status')
       }

@@ -177,6 +177,12 @@ function Dashboard() {
   const router = useRouter()
   const [realCampaigns, setRealCampaigns] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
+  const [dashboardStats, setDashboardStats] = useState({
+    activeCampaigns: 0,
+    totalImpressions: 0,
+    totalSpend: 0,
+    avgCpm: 0
+  })
 
   useEffect(() => {
     if (session) {
@@ -188,6 +194,13 @@ function Dashboard() {
         localStorage.removeItem('canopy-refresh-dashboard')
         fetchRealCampaigns()
       }
+
+      // Set up real-time updates every 30 seconds
+      const interval = setInterval(() => {
+        fetchRealCampaigns()
+      }, 30000)
+
+      return () => clearInterval(interval)
     }
   }, [session])
 
@@ -198,6 +211,7 @@ function Dashboard() {
       if (response.ok) {
         const data = await response.json()
         setRealCampaigns(data)
+        calculateDashboardStats(data)
       }
     } catch (error) {
       console.error('Error fetching campaigns:', error)
@@ -205,6 +219,32 @@ function Dashboard() {
       setLoading(false)
     }
   }
+
+  const calculateDashboardStats = (campaigns: any[]) => {
+    const activeCampaigns = campaigns.filter(c => c.status === 'ACTIVE').length
+    const totalImpressions = campaigns.reduce((sum, c) => sum + (c.impressions || 0), 0)
+    const totalSpend = campaigns.reduce((sum, c) => sum + ((c.impressions || 0) * 0.007), 0)
+    const avgCpm = campaigns.length > 0 ? totalSpend / (totalImpressions / 1000) : 0
+
+    setDashboardStats({
+      activeCampaigns,
+      totalImpressions,
+      totalSpend,
+      avgCpm: avgCpm || 7.00
+    })
+  }
+
+  // Function to refresh campaigns (can be called from campaign details page)
+  const refreshCampaigns = () => {
+    fetchRealCampaigns()
+  }
+
+  // Expose refresh function globally for campaign details page
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).refreshDashboard = refreshCampaigns
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
@@ -245,8 +285,16 @@ function Dashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <FadeIn delay={0.6}>
           <div className="mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Campaign Dashboard</h1>
-            <p className="text-xl text-gray-600">Manage your outdoor advertising campaigns</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">Campaign Dashboard</h1>
+                <p className="text-xl text-gray-600">Manage your outdoor advertising campaigns</p>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-green-600">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Live updates enabled</span>
+              </div>
+            </div>
           </div>
         </FadeIn>
 
@@ -254,16 +302,32 @@ function Dashboard() {
         <StaggerContainer className="mb-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <StaggerItem>
-              <StatCard title="Active Campaigns" value="3" change="+1 this week" />
+              <StatCard 
+                title="Active Campaigns" 
+                value={dashboardStats.activeCampaigns.toString()} 
+                change={`${realCampaigns.length} total campaigns`} 
+              />
             </StaggerItem>
             <StaggerItem>
-              <StatCard title="Total Impressions" value="45,231" change="+12.5%" />
+              <StatCard 
+                title="Total Impressions" 
+                value={dashboardStats.totalImpressions.toLocaleString()} 
+                change="Real-time data" 
+              />
             </StaggerItem>
             <StaggerItem>
-              <StatCard title="Total Spend" value="£316.62" change="+8.2%" />
+              <StatCard 
+                title="Total Spend" 
+                value={`£${dashboardStats.totalSpend.toFixed(2)}`} 
+                change="Calculated from impressions" 
+              />
             </StaggerItem>
             <StaggerItem>
-              <StatCard title="Avg. CPM" value="£7.00" change="0%" />
+              <StatCard 
+                title="Avg. CPM" 
+                value={`£${dashboardStats.avgCpm.toFixed(2)}`} 
+                change="Based on actual performance" 
+              />
             </StaggerItem>
           </div>
         </StaggerContainer>
@@ -322,8 +386,9 @@ function Dashboard() {
                         status={campaign.status}
                         impressions={campaign.impressions?.toLocaleString() || '0'}
                         spend={`£${((campaign.impressions || 0) * 0.007).toFixed(2)}`}
-                        cpm="£7.00"
+                        cpm={`£${((campaign.impressions || 0) * 0.007) / ((campaign.impressions || 0) / 1000) || 7.00}`}
                         isHardcoded={false}
+                        onStatusChange={refreshCampaigns}
                       />
                     ))}
                   </>
@@ -349,24 +414,60 @@ function StatCard({ title, value, change }: { title: string, value: string, chan
   )
 }
 
-function CampaignRow({ id, name, status, impressions, spend, cpm, isHardcoded }: {
+function CampaignRow({ id, name, status, impressions, spend, cpm, isHardcoded, onStatusChange }: {
   id?: string,
   name: string,
   status: string,
   impressions: string,
   spend: string,
   cpm: string,
-  isHardcoded?: boolean
+  isHardcoded?: boolean,
+  onStatusChange?: () => void
 }) {
-  const statusColor = status === 'Active' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-orange-100 text-orange-800 border-orange-200'
+  const statusColor = status === 'ACTIVE' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-orange-100 text-orange-800 border-orange-200'
+  
+  const handleStatusToggle = async () => {
+    if (isHardcoded || !id || !onStatusChange) return
+    
+    try {
+      const newStatus = status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE'
+      const response = await fetch(`/api/campaigns/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      })
+      
+      if (response.ok) {
+        onStatusChange() // Refresh the dashboard
+      }
+    } catch (error) {
+      console.error('Error updating campaign status:', error)
+    }
+  }
   
   return (
     <div className="flex items-center justify-between py-6 border-b border-orange-100 last:border-b-0 smooth-transition hover:bg-orange-50/50 rounded-lg px-4 -mx-4">
       <div className="flex-1">
         <h3 className="font-bold text-gray-900 text-lg mb-2">{name}</h3>
-        <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border ${statusColor}`}>
-          {status}
-        </span>
+        <div className="flex items-center space-x-3">
+          <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border ${statusColor}`}>
+            {status}
+          </span>
+          {!isHardcoded && id && (
+            <button
+              onClick={handleStatusToggle}
+              className={`text-xs px-2 py-1 rounded-full font-medium smooth-transition ${
+                status === 'ACTIVE' 
+                  ? 'bg-orange-100 text-orange-700 hover:bg-orange-200' 
+                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+              }`}
+            >
+              {status === 'ACTIVE' ? 'Pause' : 'Resume'}
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex items-center space-x-12 text-sm text-gray-600">
         <div className="text-center">

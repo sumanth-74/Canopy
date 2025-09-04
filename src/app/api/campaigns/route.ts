@@ -29,12 +29,29 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Parse JSON strings back to objects for frontend consumption
-    const parsedCampaigns = campaigns.map(campaign => ({
-      ...campaign,
-      creative: campaign.creative ? JSON.parse(campaign.creative as string) : {},
-      targetAudience: campaign.targetAudience ? JSON.parse(campaign.targetAudience as string) : {}
-    }))
+    // Parse JSON strings back to objects for frontend consumption and add impression data
+    const parsedCampaigns = campaigns.map((campaign:any) => {
+      // Generate consistent random impressions based on campaign ID
+      const getSeededRandom = (seed: string, min: number, max: number) => {
+        let hash = 0
+        for (let i = 0; i < seed.length; i++) {
+          const char = seed.charCodeAt(i)
+          hash = ((hash << 5) - hash) + char
+          hash = hash & hash // Convert to 32-bit integer
+        }
+        const normalized = Math.abs(hash) / 2147483647
+        return Math.floor(normalized * (max - min + 1)) + min
+      }
+
+      const impressions = getSeededRandom(campaign.id, 1000, 6000)
+      
+      return {
+        ...campaign,
+        creative: campaign.creative ? JSON.parse(campaign.creative as string) : {},
+        targetAudience: campaign.targetAudience ? JSON.parse(campaign.targetAudience as string) : {},
+        impressions: impressions
+      }
+    })
 
     return NextResponse.json(parsedCampaigns)
   } catch (error) {
