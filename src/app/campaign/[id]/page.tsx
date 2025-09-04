@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Play, Pause, Settings, BarChart3, MapPin, Eye, Edit, Save, X } from 'lucide-react'
+import { ArrowLeft, Play, Pause, Settings, BarChart3, MapPin, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -12,8 +12,6 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
   const [activeTab, setActiveTab] = useState('overview')
   const [campaign, setCampaign] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editedCreative, setEditedCreative] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -28,7 +26,6 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
       if (response.ok) {
         const data = await response.json()
         setCampaign(data)
-        setEditedCreative(data.creative || {})
       } else if (response.status === 404) {
         // Campaign not found - redirect to home
         router.push('/')
@@ -67,41 +64,11 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
     }
   }
 
-  const handleSaveCreative = async () => {
-    if (!campaign || !editedCreative) return
-
-    try {
-      const response = await fetch(`/api/campaigns/${params.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ creative: editedCreative })
-      })
-
-      if (response.ok) {
-        setCampaign({ ...campaign, creative: editedCreative })
-        setIsEditing(false)
-        toast.success('Creative updated successfully!')
-      } else {
-        toast.error('Failed to update creative')
-      }
-    } catch (error) {
-      console.error('Error updating creative:', error)
-      toast.error('Failed to update creative')
-    }
-  }
-
-  const handleCancelEdit = () => {
-    setEditedCreative(campaign?.creative || {})
-    setIsEditing(false)
-  }
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'analytics', label: 'Analytics', icon: Eye },
-    { id: 'targeting', label: 'Targeting', icon: MapPin },
-    { id: 'creative', label: 'Creative', icon: Settings }
+    { id: 'targeting', label: 'Targeting', icon: MapPin }
   ]
 
   const formatCurrency = (amount: number) => {
@@ -317,56 +284,209 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
                 <div>
                   {campaign.creative ? (
                     <>
-                      {/* Enhanced Ad Preview */}
-                      <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-6 mb-4 overflow-hidden relative">
-                        {/* Animated background elements */}
-                        <div className="absolute top-0 left-0 w-full h-full opacity-10">
-                          <div className="absolute top-4 left-4 w-8 h-8 bg-orange-500 rounded-full animate-ping"></div>
-                          <div className="absolute top-8 right-8 w-6 h-6 bg-orange-400 rounded-full animate-pulse"></div>
-                          <div className="absolute bottom-4 left-1/4 w-4 h-4 bg-orange-300 rounded-full animate-bounce"></div>
+                      {/* Enhanced Ad Preview - Same as Step 2 & Step 4 */}
+                      <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-orange-300 mb-6" style={{
+                        background: campaign.creative.colors && campaign.creative.colors.length >= 2 ? 
+                          `linear-gradient(135deg, ${campaign.creative.colors[0]} 0%, ${campaign.creative.colors[1]} 50%, ${campaign.creative.colors[0]} 100%)` :
+                          campaign.creative.colorScheme?.includes('blue') ? 
+                          'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%)' :
+                          campaign.creative.colorScheme?.includes('green') ? 
+                          'linear-gradient(135deg, #065f46 0%, #10b981 50%, #34d399 100%)' :
+                          campaign.creative.colorScheme?.includes('purple') ? 
+                          'linear-gradient(135deg, #581c87 0%, #8b5cf6 50%, #a78bfa 100%)' :
+                          campaign.creative.colorScheme?.includes('red') ?
+                          'linear-gradient(135deg, #991b1b 0%, #ef4444 50%, #f87171 100%)' :
+                          campaign.creative.colorScheme?.includes('gold') ? 
+                          'linear-gradient(135deg, #92400e 0%, #f59e0b 50%, #fbbf24 100%)' :
+                          'linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)'
+                      }}>
+
+                        <div className="absolute inset-0 opacity-20">
+                          {campaign.creative.visualElements?.includes('stars') && (
+                            <div className="absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">⭐</div>
+                          )}
+                          {campaign.creative.visualElements?.includes('arrow') && (
+                            <div className="absolute top-8 left-8 text-white animate-bounce text-3xl">⬆️</div>
+                          )}
+                          {campaign.creative.visualElements?.includes('motion') && (
+                            <div className="absolute bottom-4 left-4 text-white animate-pulse text-xl">✨</div>
+                          )}
+                          {campaign.creative.visualElements?.includes('trail') && (
+                            <div className="absolute bottom-8 right-8 text-yellow-200 animate-ping text-lg">💫</div>
+                          )}
+                          
+                          {/* Enhanced Flashy Effects When Animation is Applied */}
+                          {campaign.creative.appliedAnimation && (
+                            <>
+                              {/* Floating Money/Coin Effects for Sales */}
+                              {(campaign.creative.salePercentage || campaign.creative.discountType) && (
+                                <>
+                                  <div className="absolute top-8 left-8 text-yellow-300 text-2xl animate-money-rain">💰</div>
+                                  <div className="absolute top-12 right-12 text-yellow-300 text-xl animate-money-rain" style={{animationDelay: '0.5s'}}>💸</div>
+                                  <div className="absolute bottom-12 left-12 text-yellow-300 text-xl animate-money-rain" style={{animationDelay: '1s'}}>💵</div>
+                                  <div className="absolute bottom-8 right-8 text-yellow-300 text-2xl animate-money-rain" style={{animationDelay: '1.5s'}}>💎</div>
+                                  <div className="absolute top-1/2 left-1/4 text-yellow-300 text-xl animate-sparkle-burst" style={{animationDelay: '2s'}}>✨</div>
+                                  <div className="absolute top-1/3 right-1/3 text-yellow-300 text-lg animate-sparkle-burst" style={{animationDelay: '2.5s'}}>⭐</div>
+                                </>
+                              )}
+                              
+                              {/* General Flashy Effects */}
+                              <div className="absolute top-1/4 left-1/4 text-white text-3xl animate-ping opacity-60">✨</div>
+                              <div className="absolute top-3/4 right-1/4 text-white text-2xl animate-ping opacity-60" style={{animationDelay: '0.3s'}}>⭐</div>
+                              <div className="absolute top-1/2 left-1/2 text-white text-2xl animate-ping opacity-60" style={{animationDelay: '0.6s'}}>💫</div>
+                              
+                              {/* Pulsing Background Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+                            </>
+                          )}
                         </div>
+                        
+                        {/* Sale/Discount Badges in Corners */}
+                        {(campaign.creative.salePercentage || campaign.creative.discountType) && (
+                          <>
+                            {/* Top Right Corner - Discount Type Badge */}
+                            {campaign.creative.discountType && (
+                              <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-sale-bounce border-2 border-white shadow-lg z-20">
+                                {campaign.creative.discountType}!
+                              </div>
+                            )}
+                            
+                            {/* Top Left Corner - Percent Off Badge */}
+                            {campaign.creative.salePercentage && (
+                              <div className="absolute top-2 left-2 bg-yellow-400 text-red-600 text-xs font-bold px-2 py-1 rounded-full animate-sale-bounce border border-white shadow-lg z-20">
+                                {campaign.creative.salePercentage}% OFF
+                              </div>
+                            )}
+                          </>
+                        )}
 
-                        <div className="relative z-10 bg-white/95 backdrop-blur-sm rounded-2xl p-6 text-center shadow-2xl border border-orange-200">
-                          {/* Dynamic Logo Based on Business Type */}
-                          <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg animate-ad-glow relative overflow-hidden">
-                            <div className="absolute inset-0 animate-ad-shimmer rounded-2xl"></div>
-                            <span className="text-white font-bold text-xl relative z-10 animate-logo-spin">
-                              {campaign.creative.businessTypeEmoji ||
-                               (campaign.businessType?.toLowerCase().includes('restaurant') ? '🍽️' :
-                                campaign.businessType?.toLowerCase().includes('retail') ? '🛍️' :
-                                campaign.businessType?.toLowerCase().includes('fitness') ? '💪' :
-                                campaign.businessType?.toLowerCase().includes('tech') ? '💻' :
-                                campaign.businessType?.toLowerCase().includes('health') ? '🏥' :
-                                campaign.businessType?.toLowerCase().includes('education') ? '📚' :
-                                campaign.businessType?.toLowerCase().includes('finance') ? '💰' :
-                                campaign.businessType?.toLowerCase().includes('travel') ? '✈️' :
-                                '🚀')}
-                            </span>
+                        {/* Ad Content */}
+                        <div className="relative z-10 p-6 text-center">
+                          {/* Dynamic Logo - Uploaded, Applied Concept, or Business Type Based */}
+                          <div className={`w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg relative overflow-hidden border-2 border-white/30 ${
+                            (campaign.creative.appliedLogoConcept || campaign.creative.appliedAnimation) ? 'animate-ad-bounce-in' : 'animate-ad-glow'
+                          }`}>
+                            <div className="absolute inset-0 animate-ad-shimmer rounded-full"></div>
+                            {campaign.creative.logoUrl ? (
+                              <img 
+                                src={campaign.creative.logoUrl} 
+                                alt="Business logo" 
+                                className="w-12 h-12 object-contain relative z-10 animate-logo-spin drop-shadow-lg rounded-full"
+                              />
+                            ) : campaign.creative.appliedLogoConcept ? (
+                              <div className="text-white font-bold text-3xl animate-logo-spin drop-shadow-lg">
+                                {campaign.creative.appliedLogoConcept.includes('arrow') ? '⬆️' :
+                                 campaign.creative.appliedLogoConcept.includes('star') ? '⭐' :
+                                 campaign.creative.appliedLogoConcept.includes('circle') ? '⭕' :
+                                 campaign.creative.appliedLogoConcept.includes('diamond') ? '💎' :
+                                 campaign.creative.appliedLogoConcept.includes('heart') ? '❤️' :
+                                 campaign.creative.appliedLogoConcept.includes('shield') ? '🛡️' :
+                                 campaign.creative.appliedLogoConcept.includes('crown') ? '👑' :
+                                 campaign.creative.appliedLogoConcept.includes('lightning') ? '⚡' :
+                                 campaign.creative.appliedLogoConcept.includes('fire') ? '🔥' :
+                                 campaign.creative.appliedLogoConcept.includes('rocket') ? '🚀' :
+                                 campaign.creative.appliedLogoConcept.includes('food') ? '🍽️' :
+                                 campaign.creative.appliedLogoConcept.includes('shopping') ? '🛍️' :
+                                 campaign.creative.appliedLogoConcept.includes('beauty') ? '💄' :
+                                 campaign.creative.appliedLogoConcept.includes('service') ? '💼' :
+                                 campaign.creative.appliedLogoConcept.includes('entertainment') ? '🎬' :
+                                 campaign.creative.appliedLogoConcept.includes('tech') ? '💻' :
+                                 campaign.creative.appliedLogoConcept.includes('real estate') ? '🏠' :
+                                 campaign.creative.appliedLogoConcept.includes('auto') ? '🚗' : '✨'}
+                              </div>
+                            ) : (
+                              <span className="text-white font-bold text-xl relative z-10 animate-logo-spin drop-shadow-lg">
+                                {campaign.businessType === 'Restaurant & Food' ? '🍽️' :
+                                 campaign.businessType === 'Retail & Shopping' ? '🛍️' :
+                                 campaign.businessType === 'Health & Beauty' ? '💄' :
+                                 campaign.businessType === 'Professional Services' ? '💼' :
+                                 campaign.businessType === 'Entertainment' ? '🎬' :
+                                 campaign.businessType === 'Technology' ? '💻' :
+                                 campaign.businessType === 'Real Estate' ? '🏠' :
+                                 campaign.businessType === 'Automotive' ? '🚗' :
+                                 '🚀'}
+                              </span>
+                            )}
                           </div>
-
+                          
                           {/* Animated Headline */}
-                          <div className="mb-4 animate-ad-slide-in">
-                            <h4 className="font-bold text-2xl mb-2 text-gray-900 animate-gradient-shift">
-                              {campaign.creative.headline || 'Your Ad Headline'}
+                          <div className={`mb-3 ${campaign.creative.appliedAnimation ? 'animate-ad-bounce-in' : 'animate-ad-slide-in'}`}>
+                            <h4 className={`font-bold text-2xl mb-2 text-white drop-shadow-lg ${
+                              campaign.creative.appliedAnimation ? 'animate-neon-glow' : 'animate-gradient-shift'
+                            }`}>
+                              {campaign.creative.headline || 'Your Headline Here'}
                             </h4>
-                            <div className="w-20 h-1 bg-gradient-to-r from-orange-400 to-orange-600 mx-auto rounded-full animate-ad-shimmer"></div>
+                            <div className={`w-16 h-1 bg-white/80 mx-auto rounded-full ${
+                              campaign.creative.appliedAnimation ? 'animate-pulse' : 'animate-ad-shimmer'
+                            }`}></div>
+                            
+                            {/* Flashy Sale/Discount Effects for Headline */}
+                            {(campaign.creative.salePercentage || campaign.creative.discountType) && campaign.creative.appliedAnimation && (
+                              <div className="absolute inset-0 pointer-events-none">
+                                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-yellow-300/30 to-transparent animate-pulse"></div>
+                                <div className="absolute top-2 right-2 text-yellow-300 text-lg animate-bounce">💰</div>
+                                <div className="absolute bottom-2 left-2 text-yellow-300 text-lg animate-bounce">🎉</div>
+                              </div>
+                            )}
                           </div>
-
+                          
                           {/* Engaging Description */}
-                          <p className="text-gray-700 mb-4 text-base leading-relaxed animate-ad-bounce-in" style={{animationDelay: '0.2s'}}>
-                            {campaign.creative.description || 'Your compelling ad description appears here'}
+                          <p className="text-white/90 mb-4 leading-relaxed text-base max-w-md mx-auto animate-ad-bounce-in drop-shadow-md" style={{animationDelay: '0.2s'}}>
+                            {campaign.creative.description || 'Your compelling description will appear here'}
                           </p>
-
-                          {/* Animated CTA */}
-                          <button className="canopy-button px-6 py-3 font-semibold hover:scale-105 transition-transform duration-300 shadow-xl animate-button-pulse" style={{animationDelay: '0.4s'}}>
-                            {campaign.creative.cta || 'Call to Action'}
-                          </button>
-
-                          {/* Special Badge */}
-                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold animate-bounce">
-                            NEW!
+                          
+                          {/* Animated CTA Button */}
+                          <div className="relative">
+                            <button className={`bg-white text-orange-600 px-6 py-2 text-base font-bold hover:scale-105 transition-transform duration-300 shadow-xl rounded-full border-2 border-white/20 backdrop-blur-sm ${
+                              campaign.creative.appliedAnimation ? 'animate-flashy-pulse' : 'animate-button-pulse'
+                            }`} style={{animationDelay: '0.4s'}}>
+                              {campaign.creative.cta || 'Call to Action'}
+                            </button>
+                            
+                            {/* Flashy CTA Effects */}
+                            {campaign.creative.appliedAnimation && (
+                              <div className="absolute inset-0 pointer-events-none">
+                                {/* Pulsing Ring Effect */}
+                                <div className="absolute inset-0 rounded-full border-4 border-yellow-300 animate-ping opacity-75"></div>
+                                <div className="absolute inset-0 rounded-full border-2 border-yellow-400 animate-pulse"></div>
+                                
+                                {/* Sparkle Effects */}
+                                <div className="absolute -top-2 -left-2 text-yellow-300 text-sm animate-bounce">✨</div>
+                                <div className="absolute -top-2 -right-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '0.5s'}}>✨</div>
+                                <div className="absolute -bottom-2 -left-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '1s'}}>✨</div>
+                                <div className="absolute -bottom-2 -right-2 text-yellow-300 text-sm animate-bounce" style={{animationDelay: '1.5s'}}>✨</div>
+                              </div>
+                            )}
                           </div>
                         </div>
+                        
+                        {/* Special Effects Based on AI Suggestions */}
+                        {campaign.creative.animationSuggestion?.includes('trail') && (
+                          <div className="absolute inset-0 pointer-events-none">
+                            <div className="absolute top-1/2 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-300 to-transparent animate-pulse opacity-60"></div>
+                          </div>
+                        )}
+                        
+                        {/* Professional Services Special Effects */}
+                        {campaign.businessType === 'Professional Services' && (
+                          <div className="absolute inset-0 pointer-events-none">
+                            <div className="absolute top-4 left-1/4 w-2 h-2 bg-yellow-300 rounded-full animate-ping"></div>
+                            <div className="absolute top-8 right-1/4 w-1 h-1 bg-yellow-200 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+                            <div className="absolute bottom-4 left-1/3 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-ping" style={{animationDelay: '1s'}}></div>
+                            {/* Star trail effect for Professional Services */}
+                            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-yellow-300 to-transparent animate-pulse opacity-40"></div>
+                          </div>
+                        )}
+                        
+                        {/* Star Effects for any business with stars in visual elements */}
+                        {campaign.creative.visualElements?.includes('stars') && (
+                          <div className="absolute inset-0 pointer-events-none">
+                            <div className="absolute top-6 left-6 text-yellow-300 animate-pulse text-lg">⭐</div>
+                            <div className="absolute top-12 right-12 text-yellow-200 animate-ping text-sm">✨</div>
+                            <div className="absolute bottom-6 right-6 text-yellow-300 animate-pulse text-lg">⭐</div>
+                            <div className="absolute bottom-12 left-12 text-yellow-200 animate-ping text-sm">✨</div>
+                          </div>
+                        )}
                       </div>
 
                       {/* Creative Details */}
@@ -476,97 +596,6 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
           </div>
         )}
 
-        {activeTab === 'creative' && (
-          <div className="canopy-card canopy-card-hover">
-            <div className="border-b border-orange-100 pb-4 mb-6">
-              <h3 className="text-xl font-bold text-gray-900 flex items-center justify-between">
-                Creative Settings
-                {!isEditing ? (
-                  <Button className="canopy-button-secondary hover-lift" onClick={() => setIsEditing(true)}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Creative
-                  </Button>
-                ) : (
-                  <div className="flex space-x-2">
-                    <Button className="canopy-button-secondary hover-lift" onClick={handleCancelEdit}>
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button className="canopy-button hover-lift" onClick={handleSaveCreative}>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Changes
-                    </Button>
-                  </div>
-                )}
-              </h3>
-            </div>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Headline
-                    </label>
-                    <input
-                      type="text"
-                      value={isEditing ? editedCreative?.headline || '' : campaign.creative?.headline || ''}
-                      onChange={(e) => setEditedCreative({...editedCreative, headline: e.target.value})}
-                      className="canopy-input"
-                      disabled={!isEditing}
-                      placeholder="Enter your ad headline..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <textarea
-                      value={isEditing ? editedCreative?.description || '' : campaign.creative?.description || ''}
-                      onChange={(e) => setEditedCreative({...editedCreative, description: e.target.value})}
-                      rows={3}
-                      className="canopy-input"
-                      disabled={!isEditing}
-                      placeholder="Enter your ad description..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Call to Action
-                    </label>
-                    <input
-                      type="text"
-                      value={isEditing ? editedCreative?.cta || '' : campaign.creative?.cta || ''}
-                      onChange={(e) => setEditedCreative({...editedCreative, cta: e.target.value})}
-                      className="canopy-input"
-                      disabled={!isEditing}
-                      placeholder="Enter call-to-action text..."
-                    />
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 text-lg">Color Palette</h4>
-                  <div className="flex space-x-2 mb-6">
-                    {campaign.creative?.colors ? campaign.creative.colors.map((color: any, index: number) => (
-                      <div
-                        key={index}
-                        className="w-12 h-12 rounded-lg border-2 border-orange-200 hover-lift"
-                        style={{ backgroundColor: color }}
-                      />
-                    )) : (
-                      <div className="text-gray-500 text-sm p-3 bg-orange-50 rounded-lg">No colors available</div>
-                    )}
-                  </div>
-                  {!isEditing && (
-                    <Button className="canopy-button hover-lift w-full" onClick={() => setIsEditing(true)}>
-                      <Edit className="w-4 h-4 mr-2" />
-                      Start Editing
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
