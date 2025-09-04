@@ -6,6 +6,8 @@ import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverLift, FloatingElem
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import CanopyLogo from '@/components/CanopyLogo'
+import LoadingSpinner, { CardSpinner } from '@/components/LoadingSpinner'
+import { useLoading } from '@/hooks/useLoading'
 
 export default function HomePage() {
   const { data: session, status } = useSession()
@@ -174,7 +176,7 @@ function Dashboard() {
   const { data: session } = useSession()
   const router = useRouter()
   const [realCampaigns, setRealCampaigns] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
+  const { isLoading, loadingText, withLoading } = useLoading()
   const [dashboardStats, setDashboardStats] = useState({
     activeCampaigns: 0,
     totalImpressions: 0,
@@ -203,19 +205,14 @@ function Dashboard() {
   }, [session])
 
   const fetchRealCampaigns = async () => {
-    try {
-      setLoading(true)
+    await withLoading(async () => {
       const response = await fetch('/api/campaigns')
       if (response.ok) {
         const data = await response.json()
         setRealCampaigns(data)
         calculateDashboardStats(data)
       }
-    } catch (error) {
-      console.error('Error fetching campaigns:', error)
-    } finally {
-      setLoading(false)
-    }
+    }, 'Loading campaigns...')
   }
 
   const calculateDashboardStats = (campaigns: any[]) => {
@@ -362,11 +359,8 @@ function Dashboard() {
                 />
 
                 {/* Real campaigns from database */}
-                {loading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500"></div>
-                    <span className="ml-2 text-gray-600">Loading your campaigns...</span>
-                  </div>
+                {isLoading ? (
+                  <CardSpinner text={loadingText || "Loading your campaigns..."} />
                 ) : realCampaigns.length > 0 ? (
                   <>
                     {/* Separator */}

@@ -7,12 +7,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import CanopyLogo from '@/components/CanopyLogo'
+import LoadingSpinner, { FullPageSpinner, CardSpinner } from '@/components/LoadingSpinner'
+import { useLoading } from '@/hooks/useLoading'
 import toast from 'react-hot-toast'
 
 export default function CampaignDetailsPage({ params }: { params: { id: string } }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [campaign, setCampaign] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { isLoading, withLoading } = useLoading(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -20,8 +22,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
   }, [params.id])
 
   const fetchCampaignDetails = async () => {
-    try {
-      setLoading(true)
+    await withLoading(async () => {
       const response = await fetch(`/api/campaigns/${params.id}`)
 
       if (response.ok) {
@@ -33,11 +34,7 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
       } else {
         console.error('Failed to fetch campaign:', response.statusText)
       }
-    } catch (error) {
-      console.error('Error fetching campaign:', error)
-    } finally {
-      setLoading(false)
-    }
+    }, 'Loading campaign details...')
   }
 
   const handleStatusChange = async () => {
@@ -112,15 +109,8 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
     return (Math.random() * 3 + 5).toFixed(2) // Random between £5.00-£8.00
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading campaign details...</p>
-        </div>
-      </div>
-    )
+  if (isLoading) {
+    return <FullPageSpinner text="Loading campaign details..." />
   }
 
   if (!campaign) {
@@ -176,10 +166,6 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
                     Resume
                   </>
                 )}
-              </Button>
-              <Button className="canopy-button hover-lift" size="sm" onClick={() => setActiveTab('creative')}>
-                <Settings className="w-4 h-4 mr-2" />
-                Edit Creative
               </Button>
             </div>
           </div>

@@ -6,6 +6,8 @@ import { formatCurrency, calculateImpressions } from '@/lib/utils'
 import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverLift } from '@/components/ui/animated'
 import MapProvider from '@/components/MapProvider'
 import CanopyLogo from '@/components/CanopyLogo'
+import LoadingSpinner, { ButtonSpinner, FullPageSpinner } from '@/components/LoadingSpinner'
+import { useLoading } from '@/hooks/useLoading'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -14,7 +16,7 @@ export default function NewCampaignPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
+  const { isLoading, loadingText, withLoading } = useLoading()
   const [campaignData, setCampaignData] = useState({
     name: '',
     budget: '',
@@ -133,8 +135,7 @@ export default function NewCampaignPage() {
   }
 
   const launchCampaign = async () => {
-    setIsLoading(true)
-    try {
+    await withLoading(async () => {
       // Create campaign
       const campaignResponse = await fetch('/api/campaigns', {
         method: 'POST',
@@ -189,12 +190,7 @@ export default function NewCampaignPage() {
 
       toast.success('Campaign created successfully!')
       router.push('/')
-    } catch (error) {
-      console.error('Error launching campaign:', error)
-      toast.error('Failed to launch campaign. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
+    }, 'Launching campaign...')
   }
 
   const handlePrevious = () => {
@@ -204,6 +200,10 @@ export default function NewCampaignPage() {
   }
 
   const estimatedImpressions = calculateImpressions(Number(campaignData.budget) || 0)
+
+  if (isLoading && currentStep === 5) {
+    return <FullPageSpinner text="Launching your campaign..." />
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
@@ -296,8 +296,8 @@ export default function NewCampaignPage() {
         <FadeIn delay={0.8}>
           <div className="canopy-card p-10">
                                 {currentStep === 1 && <CampaignSetupStep data={campaignData} setData={setCampaignData} errors={errors} clearError={clearError} />}
-                    {currentStep === 2 && <AICreationStep data={campaignData} setData={setCampaignData} errors={errors} clearError={clearError} />}
-                    {currentStep === 3 && <TargetingStep data={campaignData} setData={setCampaignData} onLocationSelect={setSelectedLocation} />}
+                    {currentStep === 2 && <AICreationStep data={campaignData} setData={setCampaignData} errors={errors} clearError={clearError} isLoading={isLoading} withLoading={withLoading} />}
+                    {currentStep === 3 && <TargetingStep data={campaignData} setData={setCampaignData} onLocationSelect={setSelectedLocation} isLoading={isLoading} withLoading={withLoading} loadingText={loadingText} />}
                     {currentStep === 4 && <ReviewStep data={campaignData} estimatedImpressions={estimatedImpressions} />}
                     {currentStep === 5 && <PaymentStep data={campaignData} estimatedImpressions={estimatedImpressions} />}
           </div>
@@ -328,8 +328,10 @@ export default function NewCampaignPage() {
               >
                 {isLoading ? (
                   <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    {currentStep === 5 ? 'Launching...' : 'Loading...'}
+                    <ButtonSpinner size="sm" />
+                    <span className="ml-2">
+                      {currentStep === 5 ? 'Launching...' : 'Loading...'}
+                    </span>
                   </div>
                 ) : (
                   <>
@@ -464,7 +466,7 @@ function CampaignSetupStep({ data, setData, errors, clearError }: { data: any, s
   )
 }
 
-function AICreationStep({ data, setData, errors, clearError }: { data: any, setData: any, errors: any, clearError: (field: string) => void }) {
+function AICreationStep({ data, setData, errors, clearError, isLoading, withLoading }: { data: any, setData: any, errors: any, clearError: (field: string) => void, isLoading: boolean, withLoading: any }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [showColorPicker, setShowColorPicker] = useState(false)
   const [previewAnimation, setPreviewAnimation] = useState('')
@@ -606,8 +608,7 @@ function AICreationStep({ data, setData, errors, clearError }: { data: any, setD
   }
 
   const generateWithAI = async () => {
-    setIsGenerating(true)
-    try {
+    await withLoading(async () => {
       const response = await fetch('/api/ai/generate-creative', {
         method: 'POST',
         headers: {
@@ -660,26 +661,7 @@ Focus on making the suggestions relevant to what they've actually written, not j
           currentCharacters: (creative.headline?.length || 0) + (creative.description?.length || 0) + (creative.cta?.length || 0)
         }
       })
-    } catch (error) {
-      console.error('Error generating creative:', error)
-      // Fallback to user's existing content with enhancements
-      setData({
-        ...data,
-        creative: {
-          ...data.creative,
-          headline: data.creative.headline || `${data.businessType} Special Offer`,
-          description: data.creative.description || 'Visit us today for amazing deals and great service!',
-          cta: data.creative.cta || 'Visit Now',
-          logoConcept: `${data.businessType} themed logo with modern design`,
-          animationSuggestion: 'Smooth fade transitions with pulsing CTA button',
-          colorScheme: 'Orange and white with complementary accents',
-          visualElements: 'Professional imagery with motion graphics',
-          currentCharacters: (data.creative.headline?.length || 0) + (data.creative.description?.length || 0) + (data.creative.cta?.length || 0)
-        }
-      })
-    } finally {
-      setIsGenerating(false)
-    }
+    }, 'Generating AI creative suggestions...')
   }
 
   return (
@@ -926,16 +908,13 @@ Focus on making the suggestions relevant to what they've actually written, not j
             <HoverLift>
               <button
                 onClick={generateWithAI}
-                disabled={isGenerating}
+                disabled={isLoading}
                 className="w-full canopy-button py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center justify-center">
                   <Zap className="w-4 h-4 mr-2" />
-                  {isGenerating ? (
-                    <div className="flex items-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Generating...
-                    </div>
+                  {isLoading ? (
+                    <ButtonSpinner size="sm" />
                   ) : (
                     'Generate with AI'
                   )}
@@ -1294,14 +1273,13 @@ Focus on making the suggestions relevant to what they've actually written, not j
   )
 }
 
-function TargetingStep({ data, setData, onLocationSelect }: { data: any, setData: any, onLocationSelect?: (location: any) => void }) {
+function TargetingStep({ data, setData, onLocationSelect, isLoading, withLoading, loadingText }: { data: any, setData: any, onLocationSelect?: (location: any) => void, isLoading: boolean, withLoading: any, loadingText: string }) {
   const [aiRecommendations, setAiRecommendations] = useState<any>(null)
   const [isGeneratingRecommendations, setIsGeneratingRecommendations] = useState(false)
 
   // Generate AI targeting recommendations
   const generateTargetingRecommendations = async () => {
-    setIsGeneratingRecommendations(true)
-    try {
+    await withLoading(async () => {
       const response = await fetch('/api/ai/generate-targeting', {
         method: 'POST',
         headers: {
@@ -1319,30 +1297,7 @@ function TargetingStep({ data, setData, onLocationSelect }: { data: any, setData
         const recommendations = await response.json()
         setAiRecommendations(recommendations)
       }
-    } catch (error) {
-      console.error('Error generating targeting recommendations:', error)
-      // Fallback recommendations
-      setAiRecommendations({
-        optimalRadius: data.targetRadius,
-        competitorLocations: [
-          { name: 'Competitor A', address: '123 Main St', distance: '0.8km' },
-          { name: 'Competitor B', address: '456 High St', distance: '1.2km' }
-        ],
-        highFootfallRoutes: [
-          { name: 'Oxford Street', type: 'Shopping District', traffic: 'High' },
-          { name: 'King\'s Road', type: 'Commuter Route', traffic: 'Peak Hours' }
-        ],
-        peakHours: ['7-9 AM', '5-7 PM'],
-        recommendations: [
-          'Target high-footfall areas within 1km radius',
-          'Focus on commuter routes during peak hours',
-          'Consider competitor locations for conquesting',
-          'Optimize for weekend traffic patterns'
-        ]
-      })
-    } finally {
-      setIsGeneratingRecommendations(false)
-    }
+    }, 'Generating targeting recommendations...')
   }
 
   // Generate recommendations on component mount
@@ -1407,17 +1362,23 @@ function TargetingStep({ data, setData, onLocationSelect }: { data: any, setData
                 </h3>
                 <button
                   onClick={generateTargetingRecommendations}
-                  disabled={isGeneratingRecommendations}
+                  disabled={isLoading}
                   className="text-xs bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-600 transition-colors disabled:opacity-50"
                 >
-                  {isGeneratingRecommendations ? '🔄 Generating...' : '🔄 Regenerate'}
+                  {isLoading ? (
+                    <div className="flex items-center">
+                      <ButtonSpinner size="sm" />
+                      <span className="ml-1">Generating...</span>
+                    </div>
+                  ) : (
+                    '🔄 Regenerate'
+                  )}
                 </button>
               </div>
               
-              {isGeneratingRecommendations ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mx-auto mb-2"></div>
-                  <p className="text-sm text-orange-700">Analyzing location and generating recommendations...</p>
+              {isLoading ? (
+                <div className="bg-white rounded-lg p-8 shadow-sm border border-orange-100">
+                  <LoadingSpinner size="lg" variant="orange" text={loadingText || "Analyzing location and generating recommendations..."} />
                 </div>
               ) : aiRecommendations ? (
                 <div className="space-y-4">
