@@ -110,7 +110,7 @@ model Payment {
   currency      String        @default("GBP")
   status        String @default("PENDING")
   paymentMethod String
-  stripePaymentId String?
+  stripePaymentId String?     @unique
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   
