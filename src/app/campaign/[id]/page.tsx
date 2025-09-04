@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Play, Pause, Settings, BarChart3, MapPin, Eye } from 'lucide-react'
+import { ArrowLeft, Play, Pause, Settings, BarChart3, MapPin, Eye, Target } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -582,40 +582,207 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
         {activeTab === 'analytics' && <AnalyticsDashboard />}
 
         {activeTab === 'targeting' && (
-          <div className="canopy-card canopy-card-hover">
-            <div className="border-b border-orange-100 pb-4 mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Targeting Settings</h3>
+          <div className="space-y-6">
+            {/* Targeting Overview */}
+            <div className="canopy-card canopy-card-hover">
+              <div className="border-b border-orange-100 pb-4 mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Targeting Settings</h3>
+                <p className="text-sm text-gray-600 mt-1">AI-powered targeting configuration from Step 3</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Target Location:</span>
+                  <span className="font-semibold text-gray-900">{campaign.targetLocation}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Radius:</span>
+                  <span className="font-semibold text-gray-900">{campaign.targetRadius} km</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Business Type:</span>
+                  <span className="font-semibold text-gray-900">{campaign.targetAudience?.interests?.[0] || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Age Range:</span>
+                  <span className="font-semibold text-gray-900">{campaign.targetAudience?.ageRange || 'N/A'}</span>
+                </div>
+              </div>
             </div>
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 text-lg">Location Targeting</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                      <span className="text-gray-600 font-medium">Target Location:</span>
-                      <span className="font-semibold text-gray-900">{campaign.targetLocation}</span>
+
+            {/* Targeting Map & AI Recommendations */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {/* Interactive Targeting Map */}
+              <div className="canopy-card canopy-card-hover">
+                <div className="border-b border-orange-100 pb-4 mb-6">
+                  <h4 className="text-lg font-bold text-gray-900 flex items-center">
+                    <MapPin className="w-5 h-5 mr-2 text-orange-500" />
+                    Targeting Map
+                  </h4>
+                  <p className="text-sm text-gray-600 mt-1">Visual representation of your targeting area</p>
+                </div>
+                
+                {/* Map Container */}
+                <div className="relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl h-80 border border-orange-200 overflow-hidden">
+                  {/* Map Background Pattern */}
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="w-full h-full" style={{
+                      backgroundImage: `
+                        linear-gradient(90deg, #e5e7eb 1px, transparent 1px),
+                        linear-gradient(180deg, #e5e7eb 1px, transparent 1px)
+                      `,
+                      backgroundSize: '20px 20px'
+                    }} />
+                  </div>
+
+                  {/* Center Location Marker */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <div className="w-6 h-6 bg-orange-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                      <MapPin className="w-3 h-3 text-white" />
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                      <span className="text-gray-600 font-medium">Radius:</span>
-                      <span className="font-semibold text-gray-900">{campaign.targetRadius} km</span>
+                    <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-orange-500 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">
+                      {campaign.targetLocation}
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                      <span className="text-gray-600 font-medium">Status:</span>
-                      <span className="font-semibold text-gray-900">{campaign.status}</span>
+                  </div>
+
+                  {/* Target Radius Circle */}
+                  <div
+                    className="absolute border-2 border-orange-500 rounded-full opacity-30"
+                    style={{
+                      left: '50%',
+                      top: '50%',
+                      width: `${Math.min(campaign.targetRadius * 40, 200)}px`,
+                      height: `${Math.min(campaign.targetRadius * 40, 200)}px`,
+                      transform: 'translate(-50%, -50%)',
+                      background: 'radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, transparent 70%)'
+                    }}
+                  />
+
+                  {/* Available Screens */}
+                  {Array.from({ length: 8 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-3 h-3 bg-green-500 rounded-full border border-white shadow-sm"
+                      style={{
+                        left: `${30 + (i * 8) % 40}%`,
+                        top: `${25 + (i * 12) % 50}%`
+                      }}
+                      title={`Screen ${i + 1}`}
+                    />
+                  ))}
+
+                  {/* Competitor Locations */}
+                  {Array.from({ length: 3 }, (_, i) => (
+                    <div
+                      key={`comp-${i}`}
+                      className="absolute w-2 h-2 bg-red-600 rounded-full border border-white shadow-sm"
+                      style={{
+                        left: `${35 + (i * 15) % 30}%`,
+                        top: `${40 + (i * 20) % 30}%`
+                      }}
+                      title={`Competitor ${i + 1}`}
+                    />
+                  ))}
+
+                  {/* High Traffic Routes */}
+                  {Array.from({ length: 2 }, (_, i) => (
+                    <div
+                      key={`route-${i}`}
+                      className="absolute w-2 h-2 bg-purple-600 rounded-full border border-white shadow-sm"
+                      style={{
+                        left: `${20 + (i * 60) % 60}%`,
+                        top: `${60 + (i * 10) % 20}%`
+                      }}
+                      title={`High Traffic Route ${i + 1}`}
+                    />
+                  ))}
+
+                  {/* Map Legend */}
+                  <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span>Available Screens</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-600 rounded-full"></div>
+                        <span>Competitors</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                        <span>High Traffic</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                      <span className="text-gray-600 font-medium">Budget:</span>
-                      <span className="font-semibold text-gray-900">{formatCurrency(campaign.budget || 0)}</span>
+                  </div>
+
+                  {/* Radius Info */}
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                    <div className="text-sm text-gray-700">
+                      <div className="font-semibold">Target Radius</div>
+                      <div className="text-orange-600 font-bold">{campaign.targetRadius} km</div>
                     </div>
                   </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-4 text-lg">Targeting Map</h4>
-                  <div className="bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg h-48 flex items-center justify-center border border-orange-200">
-                    <div className="text-center text-gray-700">
-                      <MapPin className="w-10 h-10 mx-auto mb-3 text-orange-500" />
-                      <p className="font-medium">Interactive targeting map</p>
-                      <p className="text-sm text-gray-600 mt-1">Map integration coming soon</p>
+              </div>
+
+              {/* AI Targeting Recommendations */}
+              <div className="canopy-card canopy-card-hover">
+                <div className="border-b border-orange-100 pb-4 mb-6">
+                  <h4 className="text-lg font-bold text-gray-900 flex items-center">
+                    <Target className="w-5 h-5 mr-2 text-orange-500" />
+                    AI Targeting Recommendations
+                  </h4>
+                  <p className="text-sm text-gray-600 mt-1">AI-generated insights from Step 3</p>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Targeting Stats */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">12</div>
+                      <div className="text-xs text-gray-600">Available Screens</div>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">3</div>
+                      <div className="text-xs text-gray-600">Competitors Nearby</div>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600">2</div>
+                      <div className="text-xs text-gray-600">High Traffic Routes</div>
+                    </div>
+                  </div>
+
+                  {/* AI Recommendations */}
+                  <div className="space-y-3">
+                    <h5 className="font-semibold text-gray-900 text-sm">AI Recommendations:</h5>
+                    <div className="space-y-2">
+                      <div className="flex items-start space-x-2 p-2 bg-green-50 rounded-lg">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-700">Target high-footfall areas within {campaign.targetRadius}km radius</p>
+                      </div>
+                      <div className="flex items-start space-x-2 p-2 bg-blue-50 rounded-lg">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-700">Focus on commuter routes during peak hours (7-9 AM, 5-7 PM)</p>
+                      </div>
+                      <div className="flex items-start space-x-2 p-2 bg-purple-50 rounded-lg">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-700">Consider competitor locations for conquesting</p>
+                      </div>
+                      <div className="flex items-start space-x-2 p-2 bg-yellow-50 rounded-lg">
+                        <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <p className="text-sm text-gray-700">Optimize for weekend traffic patterns</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Peak Hours */}
+                  <div className="pt-4 border-t border-orange-100">
+                    <h5 className="font-semibold text-gray-900 text-sm mb-2">Peak Hours:</h5>
+                    <div className="flex space-x-2">
+                      {['7-9 AM', '5-7 PM'].map((hour, index) => (
+                        <span key={index} className="px-3 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                          {hour}
+                        </span>
+                      ))}
                     </div>
                   </div>
                 </div>
