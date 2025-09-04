@@ -328,3 +328,14 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Enhanced logo styling */
+.logo-enhanced {
+  transform: scale(1.1);
+  filter: drop-shadow(0 8px 16px rgba(249, 115, 22, 0.4));
+}
+
+.logo-enhanced:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 12px 24px rgba(249, 115, 22, 0.6));
+}

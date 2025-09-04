@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, MapPin, Target, Zap, CreditCard, Check, Settings
 import { formatCurrency, calculateImpressions } from '@/lib/utils'
 import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverLift } from '@/components/ui/animated'
 import MapProvider from '@/components/MapProvider'
+import CanopyLogo from '@/components/CanopyLogo'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
@@ -214,16 +215,12 @@ export default function NewCampaignPage() {
               <div className="flex items-center space-x-4">
                 <button 
                   onClick={() => router.push('/')}
-                  className="flex items-center text-orange-600 hover:text-orange-700 smooth-transition text-sm"
+                  className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg smooth-transition"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-1" />
-                  Back
+                  <ArrowLeft className="w-4 h-4" />
                 </button>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 canopy-gradient rounded-lg flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-sm">C</span>
-                  </div>
-                  <span className="text-xl font-bold canopy-text-gradient">Canopy</span>
+                <div className="flex items-center space-x-3">
+                  <CanopyLogo size="md" variant="full" />
                 </div>
               </div>
             </FadeIn>

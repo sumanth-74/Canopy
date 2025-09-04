@@ -6,6 +6,7 @@ import { ArrowLeft, Play, Pause, Settings, BarChart3, MapPin, Eye, Target } from
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
+import CanopyLogo from '@/components/CanopyLogo'
 import toast from 'react-hot-toast'
 
 export default function CampaignDetailsPage({ params }: { params: { id: string } }) {
@@ -137,21 +138,20 @@ export default function CampaignDetailsPage({ params }: { params: { id: string }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-sm shadow-lg border-b border-orange-100">
+      <div className="canopy-glass backdrop-blur-md border-b border-orange-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="canopy-button-secondary hover-lift" onClick={() => router.push('/')}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 canopy-gradient rounded-lg flex items-center justify-center hover-lift">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="text-2xl font-bold canopy-text-gradient">Canopy</span>
+              <button 
+                onClick={() => router.push('/')}
+                className="flex items-center justify-center w-8 h-8 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg smooth-transition"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div className="flex items-center space-x-3">
+                <CanopyLogo size="md" variant="full" />
               </div>
             </div>
             <div className="flex items-center space-x-3">

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { FadeIn, SlideIn, HoverLift } from '@/components/ui/animated'
 import { Mail, Lock, User, Building, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
+import CanopyLogo from '@/components/CanopyLogo'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -74,8 +75,8 @@ export default function SignUpPage() {
       <div className="max-w-md w-full">
         <FadeIn delay={0.2}>
           <div className="text-center mb-8">
-            <div className="w-16 h-16 canopy-gradient rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-6">
-              <span className="text-white font-bold text-2xl">C</span>
+            <div className="flex justify-center items-center mb-8">
+              <CanopyLogo size="md" variant="full" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Create your account</h1>
             <p className="text-gray-600">Start your outdoor advertising journey</p>

@@ -8,6 +8,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Canopy - AI-Powered Outdoor Advertising',
   description: 'The world\'s first self-serve outdoor advertising platform. Create, target, and launch campaigns on taxi-top digital billboards with AI.',
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 }
 
 export default function RootLayout({

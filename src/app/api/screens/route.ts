@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Filter out screens that are fully booked
-    const availableScreens = screens.filter(screen => 
+    const availableScreens = screens.filter((screen:any) => 
       screen.campaigns.length < 3 // Max 3 campaigns per screen
     )
 

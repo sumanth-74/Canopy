@@ -5,6 +5,7 @@ import { ArrowRight, MapPin, Target, Zap, BarChart3, CreditCard } from 'lucide-r
 import { FadeIn, SlideIn, StaggerContainer, StaggerItem, HoverLift, FloatingElement } from '@/components/ui/animated'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import CanopyLogo from '@/components/CanopyLogo'
 
 export default function HomePage() {
   const { data: session, status } = useSession()
@@ -21,11 +22,8 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <FadeIn delay={0.2}>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 canopy-gradient rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-lg">C</span>
-                </div>
-                <span className="text-2xl font-bold canopy-text-gradient">Canopy</span>
+              <div className="flex items-center space-x-4">
+                <CanopyLogo size="xl" variant="full" />
               </div>
             </FadeIn>
             <FadeIn delay={0.4}>
@@ -252,11 +250,8 @@ function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <FadeIn delay={0.2}>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 canopy-gradient rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-lg">C</span>
-                </div>
-                <span className="text-2xl font-bold canopy-text-gradient">Canopy</span>
+              <div className="flex items-center space-x-4">
+                <CanopyLogo size="md" variant="full" />
               </div>
             </FadeIn>
             <FadeIn delay={0.4}>
