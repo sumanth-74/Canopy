@@ -8,5 +8,5 @@
     "NODE_ENV": "production",
     "CI": "false"
   },
-  "buildCommand": "prisma generate && next build"
+  "buildCommand": "prisma generate && prisma db push && next build"
 }

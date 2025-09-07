@@ -20,6 +20,7 @@ declare module 'next-auth' {
 export const authOptions: NextAuthOptions = {
   // Remove adapter when using credentials provider to avoid conflicts
   // adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -32,46 +33,57 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log('🔐 Authorize called with:', { email: credentials?.email, hasPassword: !!credentials?.password })
-        
-        if (!credentials?.email || !credentials?.password) {
-          console.log('❌ Missing credentials')
-          return null
-        }
-
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          console.log('🔐 Authorize called with:', { email: credentials?.email, hasPassword: !!credentials?.password })
+          
+          if (!credentials?.email || !credentials?.password) {
+            console.log('❌ Missing credentials')
+            return null
           }
-        })
 
-        if (!user) {
-          console.log('❌ User not found:', credentials.email)
+          // Test database connection
+          await prisma.$connect()
+          console.log('✅ Database connected successfully')
+
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email
+            }
+          })
+
+          if (!user) {
+            console.log('❌ User not found:', credentials.email)
+            return null
+          }
+
+          console.log('✅ User found:', { id: user.id, email: user.email, hasPassword: !!user.password })
+
+          // Verify password - user must have a password for credentials auth
+          if (!user.password) {
+            console.log('❌ User has no password')
+            return null
+          }
+
+          const isValid = await bcrypt.compare(credentials.password, user.password)
+          console.log('🔑 Password validation result:', isValid)
+          
+          if (!isValid) {
+            console.log('❌ Invalid password')
+            return null
+          }
+
+          console.log('✅ Authentication successful for:', user.email)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          }
+        } catch (error) {
+          console.error('❌ Authentication error:', error)
           return null
-        }
-
-        console.log('✅ User found:', { id: user.id, email: user.email, hasPassword: !!user.password })
-
-        // Verify password - user must have a password for credentials auth
-        if (!user.password) {
-          console.log('❌ User has no password')
-          return null
-        }
-
-        const isValid = await bcrypt.compare(credentials.password, user.password)
-        console.log('🔑 Password validation result:', isValid)
-        
-        if (!isValid) {
-          console.log('❌ Invalid password')
-          return null
-        }
-
-        console.log('✅ Authentication successful for:', user.email)
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
+        } finally {
+          await prisma.$disconnect()
         }
       }
     })
