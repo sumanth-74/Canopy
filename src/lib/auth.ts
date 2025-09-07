@@ -5,6 +5,11 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 
+// Validate required environment variables
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET is not defined')
+}
+
 // Extend the built-in session types
 declare module 'next-auth' {
   interface Session {
@@ -21,6 +26,7 @@ export const authOptions: NextAuthOptions = {
   // Remove adapter when using credentials provider to avoid conflicts
   // adapter: PrismaAdapter(prisma),
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
