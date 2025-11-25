@@ -1,22 +1,40 @@
 # Canopy - AI-Powered Outdoor Advertising Platform
 
-Canopy is the world's first self-serve outdoor advertising platform, making taxi-top digital billboard advertising as easy as Google Ads. Built with Next.js 14, TypeScript, and modern web technologies.
+Canopy is the world's first self-serve outdoor adverti
+sing platform, making taxi-top digital billboard adver
+tising as easy as Google Ads. Built with Next.js 14, T
+ypeScript, and modern web technologies.
 
-> **Latest Update**: Fixed Vercel deployment issues and Prisma configuration for production deployment.
+
 
 ## 🚀 Features
 
-- **AI-Powered Ad Creation**: Generate compelling ad copy with OpenAI integration
-- **Smart Targeting**: Target customers around your store, near competitors, or on high-traffic routes
-- **Real-Time Analytics**: Live tracking of impressions, reach, and demographic insights
-- **Interactive Maps**: Mapbox integration for visual campaign planning
-- **Secure Payments**: Stripe integration for seamless payment processing
-- **User Authentication**: NextAuth.js with multiple provider support
-- **Responsive Design**: Beautiful orange and white theme with smooth animations
+- **AI-Powered Ad Creation**: Generate compelling ad c
+opy with OpenAI integration
+
+- **Smart Targeting**: Target customers around your st
+ore, near competitors, or on high-traffic routes
+
+- **Real-Time Analytics**: Live tracking of impression
+s, reach, and demographic insights
+
+- **Interactive Maps**: Mapbox integration for visual
+campaign planning
+
+- **Secure Payments**: Stripe integration for seamless
+ payment processing
+
+- **User Authentication**: NextAuth.js with multiple p
+rovider support
+
+- **Responsive Design**: Beautiful orange and white th
+eme with smooth animations
+
 
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **Next.js 14** with App Router
 - **React 18** with TypeScript
 - **Tailwind CSS** for styling
@@ -25,6 +43,7 @@ Canopy is the world's first self-serve outdoor advertising platform, making taxi
 - **Mapbox GL JS** for interactive maps
 
 ### Backend
+
 - **Next.js API Routes**
 - **Prisma** ORM with PostgreSQL
 - **NextAuth.js** for authentication
@@ -32,6 +51,7 @@ Canopy is the world's first self-serve outdoor advertising platform, making taxi
 - **OpenAI API** for AI features
 
 ### Database
+
 - **PostgreSQL** with Prisma schema
 - User management and authentication
 - Campaign and analytics data
@@ -39,7 +59,7 @@ Canopy is the world's first self-serve outdoor advertising platform, making taxi
 
 ## 📋 Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL database
 - Stripe account
 - OpenAI API key
@@ -58,7 +78,9 @@ npm install
 
 ### 2. Environment Setup
 
-Copy the environment template and fill in your credentials:
+Copy the environment template and fill in your credent
+ials:
+
 
 ```bash
 cp env.example .env
@@ -68,7 +90,9 @@ Update `.env` with your actual values:
 
 ```env
 # Database
-DATABASE_URL="postgresql://username:password@localhost:5432/canopy?schema=public"
+DATABASE_URL="postgresql://username:password@localhost
+:5432/canopy?schema=public"
+
 
 # NextAuth.js
 NEXTAUTH_URL="http://localhost:3001"
@@ -79,7 +103,9 @@ GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
 # Stripe
-STRIPE_PUBLISHABLE_KEY="pk_test_your-stripe-publishable-key"
+STRIPE_PUBLISHABLE_KEY="pk_test_your-stripe-publishabl
+e-key"
+
 STRIPE_SECRET_KEY="sk_test_your-stripe-secret-key"
 STRIPE_WEBHOOK_SECRET="whsec_your-webhook-secret"
 
@@ -113,23 +139,33 @@ Visit `http://localhost:3001` to see the application.
 
 ## 📊 Database Schema
 
-The application uses a comprehensive PostgreSQL schema with the following main entities:
+The application uses a comprehensive PostgreSQL schema
+ with the following main entities:
+
 
 - **Users**: Authentication and profile data
-- **Campaigns**: Campaign details, targeting, and creative assets
+- **Campaigns**: Campaign details, targeting, and crea
+tive assets
+
 - **Payments**: Stripe payment tracking
-- **Screens**: Available taxi-top screens with locations
+- **Screens**: Available taxi-top screens with locatio
+ns
+
 - **Analytics**: Performance metrics and insights
-- **CampaignScreens**: Many-to-many relationship for screen assignments
+- **CampaignScreens**: Many-to-many relationship for s
+creen assignments
+
 
 ## 🔧 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/signin` - User sign in
 - `POST /api/auth/signup` - User registration
 - `GET /api/auth/session` - Get current session
 
 ### Campaigns
+
 - `GET /api/campaigns` - List user campaigns
 - `POST /api/campaigns` - Create new campaign
 - `GET /api/campaigns/[id]` - Get campaign details
@@ -137,22 +173,37 @@ The application uses a comprehensive PostgreSQL schema with the following main e
 - `DELETE /api/campaigns/[id]` - Delete campaign
 
 ### AI Features
-- `POST /api/ai/generate-creative` - Generate ad copy with AI
+
+- `POST /api/ai/generate-creative` - Generate ad copy
+with AI
+
 
 ### Payments
-- `POST /api/payments/create-intent` - Create Stripe payment intent
+
+- `POST /api/payments/create-intent` - Create Stripe p
+ayment intent
+
 - `POST /api/webhooks/stripe` - Stripe webhook handler
 
 ### Screens
-- `GET /api/screens` - Get available screens (with location filtering)
+
+- `GET /api/screens` - Get available screens (with loc
+ation filtering)
+
 
 ## 🎨 Design System
 
-The application uses a custom orange and white design system with:
+The application uses a custom orange and white design
+system with:
 
-- **Color Palette**: Orange gradients (orange-50 to orange-950)
+
+- **Color Palette**: Orange gradients (orange-50 to or
+ange-950)
+
 - **Components**: Custom `canopy-*` CSS classes
-- **Animations**: Smooth transitions with Framer Motion
+- **Animations**: Smooth transitions with Framer Motio
+n
+
 - **Typography**: Clear hierarchy with proper contrast
 - **Responsive**: Mobile-first design approach
 
@@ -171,17 +222,29 @@ Stripe integration handles:
 
 - **Payment Intents**: Secure payment processing
 - **Webhooks**: Real-time payment status updates
-- **Campaign Activation**: Automatic campaign launch on successful payment
-- **Multiple Methods**: Credit cards, PayPal, direct debit
+- **Campaign Activation**: Automatic campaign launch o
+n successful payment
+
+- **Multiple Methods**: Credit cards, PayPal, direct d
+ebit
+
 
 ## 🤖 AI Integration
 
 OpenAI API powers:
 
-- **Ad Copy Generation**: AI-generated headlines, descriptions, and CTAs
-- **Campaign Optimization**: Smart targeting recommendations
-- **Content Suggestions**: Industry-specific ad variations
-- **Performance Insights**: AI-powered analytics interpretation
+- **Ad Copy Generation**: AI-generated headlines, desc
+riptions, and CTAs
+
+- **Campaign Optimization**: Smart targeting recommend
+ations
+
+- **Content Suggestions**: Industry-specific ad variat
+ions
+
+- **Performance Insights**: AI-powered analytics inter
+pretation
+
 
 ## 🗺️ Map Integration
 
@@ -189,8 +252,12 @@ Mapbox provides:
 
 - **Interactive Maps**: Visual campaign planning
 - **Location Search**: Geocoding and address lookup
-- **Screen Visualization**: Show available screens on map
-- **Radius Targeting**: Visual targeting area selection
+- **Screen Visualization**: Show available screens on
+map
+
+- **Radius Targeting**: Visual targeting area selectio
+n
+
 
 ## 📱 Responsive Design
 
@@ -211,7 +278,9 @@ The application is fully responsive with:
 
 ### Other Platforms
 
-The application can be deployed to any platform supporting Next.js:
+The application can be deployed to any platform suppor
+ting Next.js:
+
 
 - **Netlify**: Static site generation
 - **Railway**: Full-stack deployment
@@ -285,6 +354,4 @@ For support and questions:
 
 ---
 
-Built with ❤️ using Next.js, TypeScript, and modern web technologies.#   F o r c e   V e r c e l   r e d e p l o y 
- 
- 
+Built with ❤️ using Next.js, TypeScript, and modern web technologies.
